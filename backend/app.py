@@ -5,8 +5,10 @@ from fastapi import FastAPI, Request, BackgroundTasks, HTTPException, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
+from typing import List
 from contextlib import asynccontextmanager
-
+from fastapi.middleware.cors import CORSMiddleware
 
 DEBUG = os.environ.get("DEBUG", "").strip().lower() in {
     "1", "true", "on", "yes"}
@@ -45,6 +47,14 @@ app = FastAPI(
     lifespan=app_lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Update this to your frontend's URL in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 templates = Jinja2Templates(directory="src/templates")
 
 
@@ -57,5 +67,17 @@ def index(request: Request):
 def get_test():
     return {"Hello": "World"}
 
+class Post(BaseModel):
+    id: int
+    title: str
+    body: str
 
+@app.get("/posts", response_model=List[Post])
+async def get_posts():
+    return [
+        {"id": 1, "title": "First Post", "body": "This is the body of the first post"},
+        {"id": 2, "title": "Second Post", "body": "This is the body of the second post"},
+        # Add more posts as needed
+    ]
+    
 print("completed app init.")
