@@ -115,7 +115,7 @@ def read_item(item_id: int, q: Union[str, None] = None):
 fastapi dev app.py
 
 # or
-uvicorn app:app --reload
+uvicorn app.main:app --reload
 ```
 
 

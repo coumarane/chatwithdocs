@@ -8,7 +8,7 @@ export type Post = {
 
 // Fetch posts from FastAPI backend
 const fetchPosts = async (limit: number): Promise<Post[]> => {
-  const response = await fetch('http://127.0.0.1:8000/posts');
+  const response = await fetch('http://127.0.0.1:8000/api/posts');
   if (!response.ok) {
     throw new Error('Failed to fetch posts');
   }

@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.0.4 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="26.0.4">
   <diagram name="Page-1" id="yDXGCuGoEaqL-VErvjSq">
-    <mxGraphModel dx="1242" dy="832" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1553" dy="1040" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -129,27 +129,6 @@
             <mxPoint x="528" y="1539" as="sourcePoint" />
             <mxPoint x="402" y="1634" as="targetPoint" />
           </mxGeometry>
-        </mxCell>
-        <mxCell id="OauRLrOld_A3xyYv3yS7-29" value="" style="swimlane;startSize=0;" vertex="1" parent="1">
-          <mxGeometry x="886" y="1898" width="200" height="200" as="geometry" />
-        </mxCell>
-        <mxCell id="OauRLrOld_A3xyYv3yS7-30" value="OpenAI API" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="OauRLrOld_A3xyYv3yS7-29">
-          <mxGeometry x="40" y="51" width="120" height="80" as="geometry" />
-        </mxCell>
-        <mxCell id="OauRLrOld_A3xyYv3yS7-31" value="" style="swimlane;startSize=0;" vertex="1" parent="1">
-          <mxGeometry x="466" y="1841" width="314" height="305" as="geometry" />
-        </mxCell>
-        <mxCell id="OauRLrOld_A3xyYv3yS7-33" value="ChromaDB" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="OauRLrOld_A3xyYv3yS7-31">
-          <mxGeometry x="149" y="177" width="120" height="80" as="geometry" />
-        </mxCell>
-        <mxCell id="OauRLrOld_A3xyYv3yS7-34" value="BackEnd&lt;div&gt;(FastAPI)&lt;/div&gt;" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="OauRLrOld_A3xyYv3yS7-31">
-          <mxGeometry x="72" y="32" width="120" height="80" as="geometry" />
-        </mxCell>
-        <mxCell id="OauRLrOld_A3xyYv3yS7-35" value="FrontEnd&lt;div&gt;(NextJs)&lt;/div&gt;" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="288" y="1943" width="120" height="80" as="geometry" />
-        </mxCell>
-        <mxCell id="OauRLrOld_A3xyYv3yS7-36" value="Storage&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;(aws s3)&lt;/span&gt;&lt;/div&gt;" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="153" y="1793" width="120" height="80" as="geometry" />
         </mxCell>
         <mxCell id="OauRLrOld_A3xyYv3yS7-37" value="PostgreSQL" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="478" y="1305" width="120" height="80" as="geometry" />

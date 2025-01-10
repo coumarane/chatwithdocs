@@ -151,7 +151,7 @@
         <mxCell id="OauRLrOld_A3xyYv3yS7-36" value="Storage&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;(aws s3)&lt;/span&gt;&lt;/div&gt;" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="153" y="1793" width="120" height="80" as="geometry" />
         </mxCell>
-        <mxCell id="OauRLrOld_A3xyYv3yS7-37" value="Database" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="OauRLrOld_A3xyYv3yS7-37" value="PostgreSQL" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="478" y="1305" width="120" height="80" as="geometry" />
         </mxCell>
         <mxCell id="OauRLrOld_A3xyYv3yS7-38" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.442;entryY=0.963;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="1" source="OauRLrOld_A3xyYv3yS7-15" target="OauRLrOld_A3xyYv3yS7-37">
