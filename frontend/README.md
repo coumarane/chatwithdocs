@@ -65,31 +65,33 @@ npm install axios
 # npm install compromise
 ```
 
-- Components
+- Init shadcn
 ```bash
-cd apps/frontend 
-npx shadcn-ui@latest init
+npx shadcn init
 ```
+
+- Components
 
 * add component
 ```bash
 cd apps/frontend
-npx shadcn-ui@latest add label
-npx shadcn-ui@latest add button
-npx shadcn-ui@latest add dialog
-npx shadcn-ui@latest add card
-npx shadcn-ui@latest add form
-npx shadcn-ui@latest add input
-npx shadcn-ui@latest add select
-npx shadcn-ui@latest add alert-dialog
-npx shadcn-ui@latest add avatar
-npx shadcn-ui@latest add dropdown-menu
-npx shadcn-ui@latest add select
-npx shadcn-ui@latest add table
-npx shadcn-ui@latest add tabs
-npx shadcn-ui@latest add sheet
-npx shadcn-ui@latest add accordion
-npx shadcn-ui@latest add scroll-area
-npx shadcn-ui@latest add popover
-npx shadcn-ui@latest add progress
+npx shadcn add label
+npx shadcn add button
+npx shadcn add dialog
+npx shadcn add alert
+npx shadcn add card
+npx shadcn add form
+npx shadcn add input
+npx shadcn add alert-dialog
+npx shadcn add avatar
+npx shadcn add dropdown-menu
+npx shadcn add select
+npx shadcn add table
+npx shadcn add tabs
+npx shadcn add sheet
+npx shadcn add accordion
+npx shadcn add scroll-area
+npx shadcn add popover
+npx shadcn add progress
+npx shadcn add skeleton
 ```
