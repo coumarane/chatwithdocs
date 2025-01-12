@@ -4,7 +4,7 @@ from app.domain.post import Post
 
 router = APIRouter()
 
-@router.get("/posts", response_model=List[Post])
+@router.get("/posts")
 async def get_posts():
     return [
         {"id": 1, "title": "First Post", "body": "This is the body of the first post"},
