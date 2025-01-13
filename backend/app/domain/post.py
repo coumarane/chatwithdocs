@@ -1,19 +1,19 @@
-# from pydantic import BaseModel
-#
-#
-# class Post(BaseModel):
-#     id: int
-#     title: str
-#     body: str
+from datetime import datetime
+from sqlalchemy import func
+from sqlalchemy.orm import Mapped, mapped_column
+from app.domain.base_entity import BaseEntity
 
+class Post(BaseEntity):
+    __tablename__ = "posts"
 
-from sqlalchemy import Column, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(nullable=True)
+    body: Mapped[str] = mapped_column(nullable=True)
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        server_default=func.now(), onupdate=func.now()
+    )
+    deleted_at: Mapped[datetime | None]
 
-Base = declarative_base()
-
-class Post(Base):
-    __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, unique=True, index=True, nullable=False)
-    body = Column(String, unique=True, index=True, nullable=False)
+    def __repr__(self) -> str:
+        return f"users(id={self.id})"

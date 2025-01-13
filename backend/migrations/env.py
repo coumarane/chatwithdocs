@@ -1,9 +1,21 @@
+import pkgutil
+import importlib
 from logging.config import fileConfig
-
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+
+# NEW
+# Automatically discover and import all models in the app.domain package
+def load_models(package_name):
+    package = importlib.import_module(package_name)
+    for _, module_name, _ in pkgutil.iter_modules(package.__path__):
+        importlib.import_module(f"{package_name}.{module_name}")
+
+# NEW
+# Call the function to load all models
+load_models("app.domain")
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -18,9 +30,9 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from app.domain import Base  # Adjust this import to match your project structure
-target_metadata = Base.metadata
-# target_metadata = None
+# target_metadata = None # COMMENTED
+from app.domain.base_entity import BaseEntity  # NEW
+target_metadata = BaseEntity.metadata # UPDATED
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
