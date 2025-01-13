@@ -4,6 +4,7 @@ from app.core.config import DEBUG, tags_metadata
 from app.core.lifecycle import app_lifespan
 from app.api.routes.posts import router as posts_router
 from app.api.routes.general import router as general_router
+from app.api.routes.users import router as user_router
 
 app = FastAPI(
     debug=DEBUG,
@@ -30,5 +31,6 @@ app.add_middleware(
 # Include API routes
 app.include_router(general_router)
 app.include_router(posts_router, prefix="/api")
+app.include_router(user_router, prefix="/api", tags=["users"])
 
 print("completed app init.")

@@ -90,3 +90,5 @@ venv/
 # Mac OS Desktop Services Store
 **/.DS_Store
 
+# JetBrains
+**/.idea/

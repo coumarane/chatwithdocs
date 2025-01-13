@@ -115,7 +115,20 @@ def read_item(item_id: int, q: Union[str, None] = None):
 fastapi dev app.py
 
 # or
-uvicorn app.main:app --reload
+alembic upgrade head
 ```
 
+
+# Database Postgresql
+```bash
+pip install asyncpg sqlalchemy databases alembic psycopg2
+# dev mode
+pip install asyncpg sqlalchemy databases alembic psycopg2-binary
+```
+
+* asyncpg: Asyncpg is a database interface library designed specifically for PostgreSQL and Python/asyncio. (https://magicstack.github.io/asyncpg/current/)
+* sqlalchemy: SQLAlchemy is the Python SQL toolkit and Object Relational Mapper that gives application developers the full power and flexibility of SQL. (https://www.sqlalchemy.org/)
+* alembic: Alembic is a lightweight database migration tool for usage with the SQLAlchemy Database Toolkit for Python. (https://alembic.sqlalchemy.org/en/latest/)
+* databases: Databases gives you simple asyncio support for a range of databases. (https://pypi.org/project/databases/)
+* psycopg2 0r psycopg2-binary (only for dev mode): Psycopg is the most popular PostgreSQL database adapter for the Python programming language. (https://pypi.org/project/psycopg2/)
 

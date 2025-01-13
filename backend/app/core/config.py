@@ -1,6 +1,12 @@
 import os
+from pydantic_settings import BaseSettings
+from dotenv import load_dotenv
+
+# Load environment variables from a .env file
+load_dotenv()
 
 DEBUG = os.environ.get("DEBUG", "").strip().lower() in {"1", "true", "on", "yes"}
+
 
 tags_metadata = [
     {
@@ -12,3 +18,10 @@ tags_metadata = [
         "description": "ChatWithDocs Service APIs"
     },
 ]
+
+
+
+class Settings(BaseSettings):
+    DATABASE_URL: str = os.getenv("DATABASE_URL")
+
+settings = Settings()
