@@ -23,7 +23,7 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_USER: chatdocuser
-      POSTGRES_PASSWORD: PassWord@!23
+      POSTGRES_PASSWORD: PassWord123
       POSTGRES_DB: chatdocdb
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -39,7 +39,14 @@ networks:
 ```
 
 ```bash
+cd infra
 docker-compose down
 docker volume rm infra_pgdata
 docker-compose up -d
+```
+
+# Migrations
+```bash
+alembic revision --autogenerate -m "Create users and posts tables"
+alembic upgrade head
 ```
