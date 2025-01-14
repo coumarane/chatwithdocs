@@ -132,3 +132,16 @@ pip install asyncpg sqlalchemy databases alembic psycopg2-binary
 * databases: Databases gives you simple asyncio support for a range of databases. (https://pypi.org/project/databases/)
 * psycopg2 0r psycopg2-binary (only for dev mode): Psycopg is the most popular PostgreSQL database adapter for the Python programming language. (https://pypi.org/project/psycopg2/)
 
+# Api Structure
+- app
+  -- api
+    ---- routes               # FastAPI or Flask route handlers (API endpoints)
+  -- core                     # Application-wide utilities, configurations, and core logic
+  -- domain                   # Core business models (SQLAlchemy models, Pydantic domain models, enums, etc.)
+  -- repositories             # Database access and query logic (e.g., CRUD operations)
+  -- services                 # Business logic and application services
+  -- schemas                  # Pydantic schemas for request validation and response serialization
+  -- templates                # HTML templates (if using templating engines like Jinja2)
+- main.py                     # Application entry point
+- test                        # Unit and integration tests
+- migrations                  # Database migration files (e.g., Alembic)

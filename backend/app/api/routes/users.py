@@ -1,26 +1,21 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
-from app.repositories.user_repository import UserRepository
+from app.schemas.user import UserRead, UserCreate
 from app.services.user_service import UserService
 
 router = APIRouter()
 
-@router.post("/users/")
+@router.post("/users/", response_model=UserRead)
 async def create_user(
-    username: str,
-    email: str,
-    password: str,
+    user_create: UserCreate,  # Use the Pydantic schema
     db: AsyncSession = Depends(get_db),
 ):
-    user_repository = UserRepository(db)
-    user_service = UserService(user_repository)
+    service = UserService(db)
 
-    existing_user = await user_service.get_user_by_username(username)
+    existing_user = await service.get_user_by_username(user_create.username)
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already taken")
 
-    # Hash password
-    hashed_password = f"hashed-{password}"
-    user = await user_service.create_user(username, email, hashed_password)
-    return {"id": user.id, "username": user.username, "email": user.email}
+    user = await service.create_user(user_create=user_create)
+    return user
