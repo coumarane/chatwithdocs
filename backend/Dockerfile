@@ -1,10 +1,29 @@
-FROM python:3
+# Use the official Python 3.13.1 base image
+FROM python:3.13.1-slim
 
-WORKDIR /usr/src/app
-COPY requirements.txt ./
+# Set environment variables for Python
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-RUN pip install --no-cache-dir --upgrade -r ./requirements.txt
+# Set the working directory inside the container
+WORKDIR /app
 
-EXPOSE 3001
+# Copy requirements file to the container
+COPY requirements.txt /app/requirements.txt
 
-CMD [ "fastapi", "dev app.py" ]
+# Install system dependencies and Python dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gcc && \
+    pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    apt-get remove -y gcc && apt-get autoremove -y && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy the application code to the container
+COPY . /app
+
+# Expose the default port for Uvicorn
+EXPOSE 8002
+
+# Specify the default command to run the application
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8002", "--reload"]

@@ -1,0 +1,12 @@
+version: '2'
+services:
+  chatwithdoc-api:
+    container_name: chatwithdoc-api
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    restart: 'on-failure'
+    ports:
+      - 8002:8002
+    env_file:
+      - ./app/.env

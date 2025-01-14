@@ -115,7 +115,7 @@ def read_item(item_id: int, q: Union[str, None] = None):
 fastapi dev app.py
 
 # or
-alembic upgrade head
+uvicorn app.main:app --reload
 ```
 
 
@@ -126,6 +126,12 @@ pip install asyncpg sqlalchemy databases alembic psycopg2
 pip install asyncpg sqlalchemy databases alembic psycopg2-binary
 ```
 
+# Database Migrations
+```bash
+alembic revision --autogenerate -m "Init database schemas"
+alembic upgrade head
+```
+
 * asyncpg: Asyncpg is a database interface library designed specifically for PostgreSQL and Python/asyncio. (https://magicstack.github.io/asyncpg/current/)
 * sqlalchemy: SQLAlchemy is the Python SQL toolkit and Object Relational Mapper that gives application developers the full power and flexibility of SQL. (https://www.sqlalchemy.org/)
 * alembic: Alembic is a lightweight database migration tool for usage with the SQLAlchemy Database Toolkit for Python. (https://alembic.sqlalchemy.org/en/latest/)
@@ -134,6 +140,7 @@ pip install asyncpg sqlalchemy databases alembic psycopg2-binary
 
 # Api Structure
 - app
+  -- .env                     # gitignored
   -- api
     ---- routes               # FastAPI or Flask route handlers (API endpoints)
   -- core                     # Application-wide utilities, configurations, and core logic
@@ -142,6 +149,29 @@ pip install asyncpg sqlalchemy databases alembic psycopg2-binary
   -- services                 # Business logic and application services
   -- schemas                  # Pydantic schemas for request validation and response serialization
   -- templates                # HTML templates (if using templating engines like Jinja2)
-- main.py                     # Application entry point
+  -- main.py                     # Application entry point
 - test                        # Unit and integration tests
 - migrations                  # Database migration files (e.g., Alembic)
+
+# Building and Running the Docker Container
+1. Build the Docker Image:
+```bash
+docker build -t chatwithdocs-fastapi-app .
+```
+
+2. Run the Container:
+```bash
+docker run --env-file app/.env -p 8000:8000 chatwithdocs-fastapi-app
+```
+
+3. Access the Application:
+* Open a browser or use a tool like `curl` to access `http://localhost:8000`.
+
+**Using .env in Docker**
+* The --env-file option in the docker run command loads your .env file into the container's environment variables.
+* Ensure sensitive data in .env (like database credentials) is excluded from version control using .gitignore.
+
+# Test Unitaire
+```bash
+pytest
+```
