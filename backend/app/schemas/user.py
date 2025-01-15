@@ -12,6 +12,10 @@ class UserRead(BaseModel):
     username: str
     email: EmailStr
 
+    model_config = {
+        "from_attributes": True  # Enables attribute mapping from ORM objects
+    }
+
 
 class UserUpdate(BaseModel):
     username: str | None = None
