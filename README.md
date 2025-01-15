@@ -57,3 +57,20 @@ Accessed by the BackEnd for read/write operations.
 /docs
 /frontend
 /infra
+
+
+# Run Apps
+
+## Docker compose
+```bash
+cd infra
+docker-compose up --build -d
+```
+
+## Db Migrations
+```bash
+cd backend
+alembic revision --autogenerate -m "Init database"  
+alembic upgrade head  
+```
+

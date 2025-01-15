@@ -22,6 +22,9 @@ RUN apt-get update && \
 # Copy the application code to the container
 COPY . /app
 
+# Copy the .env file from app/ to the container as .env
+COPY app/.env.docker /app/.env
+
 # Expose the default port for Uvicorn
 EXPOSE 8002
 

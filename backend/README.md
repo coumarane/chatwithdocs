@@ -153,22 +153,6 @@ alembic upgrade head
 - test                        # Unit and integration tests
 - migrations                  # Database migration files (e.g., Alembic)
 
-# Building and Running the Docker Container
-1. Build the Docker Image:
-```bash
-docker build -t chatwithdocs-fastapi-app .
-```
-
-2. Run the Container:
-```bash
-docker run --env-file app/.env -p 8000:8000 chatwithdocs-fastapi-app
-```
-
-3. Docker compose
-```bash
-docker-compose up --build -d
-````
-
 4. Access the Application:
 * Open a browser or use a tool like `curl` to access `http://localhost:8000`.
 

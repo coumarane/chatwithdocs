@@ -3,10 +3,10 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import DEBUG, tags_metadata
 from app.core.lifecycle import app_lifespan
-from app.api.routes.posts import router as posts_router
-from app.api.routes.general import router as general_router
-from app.api.routes.users import router as user_router
-from app.api.routes.auth import router as auth_router
+from app.api.routes.posts_route import router as posts_router
+from app.api.routes.general_route import router as general_router
+from app.api.routes.users_route import router as user_router
+from app.api.routes.auth_route import router as auth_router
 from dotenv import load_dotenv
 
 # Load environment variables from a .env file

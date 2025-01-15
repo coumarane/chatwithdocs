@@ -7,6 +7,7 @@ from app.core.config import settings
 # openssl rand -hex 32
 # settings.JWT_SECRET
 
+
 def create_access_token(data: dict, expires_delta: timedelta):
     to_encode = data.copy()
     expire = datetime.utcnow() + expires_delta

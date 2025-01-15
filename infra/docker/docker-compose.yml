@@ -1,0 +1,111 @@
+services:
+
+#  postgres:
+#    image: postgres:latest
+#    container_name: chatwithdoc-postgresql
+#    ports:
+#      - "5432:5432"
+#    environment:
+#      POSTGRES_USER: chatdocuser
+#      POSTGRES_PASSWORD: PassWord123
+#      POSTGRES_DB: chatdocdb
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data
+#    healthcheck:
+#      test: [ "CMD-SHELL", "pg_isready -U chatdocuser -d chatdocdb" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#    networks:
+#      backend-network:
+#        ipv4_address: 172.20.0.10
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres_container
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: chatdocuser
+      POSTGRES_PASSWORD: PassWord123
+      POSTGRES_DB: chatdocdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U chatdocuser -d chatdocdb" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - postgres_network
+
+  chatwithdoc-api:
+    container_name: chatwithdoc-api
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    restart: 'on-failure'
+    ports:
+      - 8002:8002
+    env_file:
+      - ../../backend/app/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      backend-network:
+        ipv4_address: 172.20.0.11
+      monitoring-chatwithdoc:
+        ipv4_address: 172.21.0.11
+
+  prometheus:
+    container_name: chatwithdoc-prometheus
+    image: prom/prometheus:latest
+    restart: always
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - 9090:9090
+    networks:
+      monitoring-chatwithdoc:
+        ipv4_address: 172.21.0.12
+
+  grafana:
+    container_name: chatwithdoc-grafana
+    image: grafana/grafana:latest
+    restart: always
+    ports:
+      - 3000:3000
+    env_file:
+      - ./grafana/grafana.env
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      monitoring-chatwithdoc:
+        ipv4_address: 172.21.0.13
+
+volumes:
+  postgres_data:
+  grafana_data:
+
+
+networks:
+  postgres_network:
+    driver: bridge
+  backend-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/24
+
+  monitoring-chatwithdoc:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.21.0.0/24

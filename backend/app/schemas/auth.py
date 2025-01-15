@@ -8,7 +8,7 @@ class LoginRequest(BaseModel):
 class TokenData(BaseModel):
     username: str | None = None
 
-class LoginResponse(TokenData):
+class LoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
