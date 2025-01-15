@@ -164,7 +164,12 @@ docker build -t chatwithdocs-fastapi-app .
 docker run --env-file app/.env -p 8000:8000 chatwithdocs-fastapi-app
 ```
 
-3. Access the Application:
+3. Docker compose
+```bash
+docker-compose up --build -d
+````
+
+4. Access the Application:
 * Open a browser or use a tool like `curl` to access `http://localhost:8000`.
 
 **Using .env in Docker**

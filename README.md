@@ -45,3 +45,15 @@ Managed by the BackEnd.
 
 Stores larger files or raw data that may not fit in the database.
 Accessed by the BackEnd for read/write operations.
+
+# Project Structure
+/.github
+/backend
+--/app
+--/migrations
+--/tests
+----/units
+----/integrations
+/docs
+/frontend
+/infra

@@ -2,6 +2,7 @@ global:
   scrape_interval: 15s  # How often to scrape targets by default.
 
 scrape_configs:
-  - job_name: "fastapi-app"
+  - job_name: 'chatwithdoc-api'
+    scrape_interval: 5s
     static_configs:
-      - targets: ["web:8000"]  # Replace with the FastAPI container's address and port
+      - targets: ["chatwithdoc-api:8002"]  # Replace with the FastAPI container's address and port
