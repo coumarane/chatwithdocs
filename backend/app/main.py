@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+import logging
 from prometheus_fastapi_instrumentator import Instrumentator
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import DEBUG, tags_metadata
@@ -14,6 +15,15 @@ from app.core.middleware.login_middleware import LoggingMiddleware
 # Load environment variables from a .env file
 load_dotenv()
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        # logging.FileHandler("app.log"),  # Logs to a file named `app.log`
+        logging.StreamHandler()  # Logs to console
+    ],
+)
 
 app = FastAPI(
     debug=DEBUG,
