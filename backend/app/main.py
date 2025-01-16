@@ -9,6 +9,8 @@ from app.api.routes.users_route import router as user_router
 from app.api.routes.auth_route import router as auth_router
 from dotenv import load_dotenv
 
+from app.core.middleware.login_middleware import LoggingMiddleware
+
 # Load environment variables from a .env file
 load_dotenv()
 
@@ -34,6 +36,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add the logging middleware
+app.add_middleware(LoggingMiddleware)
 
 # Include API routes
 app.include_router(general_router)
