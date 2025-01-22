@@ -89,6 +89,12 @@ class UserRepository:
             print(f"Error updating password: {e}")
             raise
 
+
+    # get user by email
+    async def get_user_by_email(self, email: str):
+        result = await self.db.execute(select(User).where(User.email == email))
+        return result.scalar_one_or_none()
+
     # get user by username
     async def get_user_by_username(self, username: str):
         result = await self.db.execute(select(User).where(User.username == username))

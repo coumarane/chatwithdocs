@@ -1,4 +1,8 @@
 from typing import Optional, List
+
+from fastapi import HTTPException, status
+
+from app.core.exceptions.exceptions import UserEmailAlreadyExistsException
 from app.repositories.user_repository import UserRepository
 from app.domain.user import User
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,6 +19,14 @@ class UserService:
     async def create_user(self, user_create: UserCreate, current_user: Optional[str] = None) -> User:
         # Hash the user's password
         hashed_password = pwd_context.hash(user_create.password)
+
+        # User exists
+        user_email_exists = await self.get_user_by_email(user_create.email)
+        if user_email_exists:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User with email already exists"
+            )
 
         new_user = User(
             username=user_create.username,
@@ -57,6 +69,9 @@ class UserService:
         if updated_user:
             return True
         return False
+
+    async  def get_user_by_email(self, email: str) -> Optional[User]:
+        return await self.repo.get_user_by_email(email)
 
     async def get_user_by_username(self, username: str) -> Optional[User]:
         return await self.repo.get_user_by_username(username)

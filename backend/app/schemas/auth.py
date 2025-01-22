@@ -4,9 +4,8 @@ from app.schemas.user import UserRead
 
 
 class LoginRequest(BaseModel):
-    username: str
+    email: str
     password: str
-
 
 class TokenData(BaseModel):
     username: str | None = None

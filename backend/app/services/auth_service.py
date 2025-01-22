@@ -39,11 +39,11 @@ class AuthService:
         """
         Authenticate the user and return a JWT token if successful.
         """
-        user = await self.repo.get_user_by_username(login_request.username)
+        user = await self.repo.get_user_by_email(login_request.email)
         if not user or not verify_password(login_request.password, user.hashed_password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid username or password",
+                detail="Invalid email or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
