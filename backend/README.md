@@ -164,3 +164,8 @@ alembic upgrade head
 ```bash
 pytest
 ```
+
+# Test API Rest
+```bash
+brew install restfox
+```

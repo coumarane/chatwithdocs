@@ -49,13 +49,13 @@ class AuthService:
 
         # Generate access token
         access_token = create_access_token(
-            data={"sub": user.username, "token_type": "access"},
+            data={"sub": user.user_name, "token_type": "access"},
             expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
         )
 
         # Generate refresh token
         refresh_token = create_refresh_token(
-            data={"sub": user.username, "token_type": "refresh"},
+            data={"sub": user.user_name, "token_type": "refresh"},
             expires_delta=timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES),
         )
 

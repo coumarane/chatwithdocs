@@ -17,15 +17,19 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         if body:
             self.logger.info(f"Body: {body.decode('utf-8')}")
 
-        # Process the request
+        # Process the request and get the response
         response = await call_next(request)
 
-        # Log response details
-        self.logger.info(f"Response status: {response.status_code}")
-        if response.status_code == 422:  # Log additional details for 422 errors
+        # If status code is 422, log the response body
+        if response.status_code == 422:
             response_body = b"".join([chunk async for chunk in response.body_iterator])
             self.logger.info(f"Response Body: {response_body.decode('utf-8')}")
+
+            # We need to restore the response body iterator
             response.body_iterator = iter([response_body])  # Restore response body iterator
+
+        # Log response status
+        self.logger.info(f"Response status: {response.status_code}")
 
         return response
 

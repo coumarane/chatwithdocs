@@ -1,4 +1,5 @@
 from typing import List
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,7 +16,7 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
     """
     Get the current user's profile.
     """
-    return {"username": current_user.username, "email": current_user.email}
+    return {"username": current_user.user_name, "email": current_user.email}
 
 @router.post("/users/", response_model=UserRead)
 async def create_user(
@@ -32,7 +33,7 @@ async def create_user(
     return user
 
 @router.put("/users/{user_id}", response_model=UserRead)
-async def update_user(user_id: int, user_update: UserUpdate, db: AsyncSession = Depends(get_db)):
+async def update_user(user_id: UUID, user_update: UserUpdate, db: AsyncSession = Depends(get_db)):
     service = UserService(db)
 
     updated_user = await service.update_user(user_id, user_update)
@@ -41,7 +42,7 @@ async def update_user(user_id: int, user_update: UserUpdate, db: AsyncSession = 
     return updated_user
 
 @router.delete("/users/{user_id}")
-async def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_user(user_id: UUID, db: AsyncSession = Depends(get_db)):
     user_service = UserService(db)
     success = await user_service.delete_user(user_id)
     if not success:
@@ -49,7 +50,7 @@ async def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
     return {"detail": "User deleted successfully"}
 
 @router.patch("/users/{user_id}/password")
-async def update_password(user_id: int, new_password: str, db: AsyncSession = Depends(get_db)):
+async def update_password(user_id: UUID , new_password: str, db: AsyncSession = Depends(get_db)):
     """
     Endpoint to update a user's password.
 

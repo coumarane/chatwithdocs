@@ -1,8 +1,5 @@
 from typing import Optional, List
-
 from fastapi import HTTPException, status
-
-from app.core.exceptions.exceptions import UserEmailAlreadyExistsException
 from app.repositories.user_repository import UserRepository
 from app.domain.user import User
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,7 +26,7 @@ class UserService:
             )
 
         new_user = User(
-            username=user_create.username,
+            user_name=user_create.username,
             email=user_create.email,
             hashed_password=hashed_password,
         )
@@ -44,10 +41,21 @@ class UserService:
         :param user_update: UserUpdate schema with fields to update.
         :return: Updated UserRead object or None if user does not exist.
         """
-        updates = user_update.model_dump(exclude_unset=True)
-        updated_user = await self.repo.update_user(user_id, updates)
+
+        # Fetch the user from the database
+        user = await self.repo.get(User, user_id)
+        if user is None:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        if user_update.username is not None:
+            user.user_name = user_update.username
+        if user_update.email is not None:
+            user.email = user_update.email
+
+        # updates = user.model_dump(exclude_unset=True)
+        updated_user = await self.repo.update_user(user_id, user)
         if updated_user:
-            return UserRead(id=updated_user.id, username=updated_user.username, email=updated_user.email)
+            return UserRead(id=updated_user.id, username=updated_user.user_name, email=updated_user.email)
         return None
 
     # delete user
@@ -76,6 +84,6 @@ class UserService:
     async def get_user_by_username(self, username: str) -> Optional[User]:
         return await self.repo.get_user_by_username(username)
 
-    async def get_all_users(self, skip: int = 0, limit: int = 10) -> List[UserRead]:
-        users = await self.repo.get_all_users(skip=skip, limit=limit)
+    async def get_all_users(self, page: int = 1, page_size: int = 10) -> List[UserRead]:
+        users = await self.repo.get_paginated_users(page, page_size)
         return [UserRead(id=user.id, username=user.username, email=user.email) for user in users]
