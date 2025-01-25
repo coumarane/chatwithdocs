@@ -1,32 +1,32 @@
 "use client"
 
 import React, { useState } from 'react'
-import { usePosts } from '../hooks/usePost'
+import { usePosts } from '../../hooks/usePost'
 
 export const PostList = () => {
-    const [postCount, setPostCount] = useState(10)
-    const { data, isPending, isFetching } = usePosts(postCount)
+  const [postCount, setPostCount] = useState(10)
+  const { data, isPending, isFetching } = usePosts(postCount)
 
-    if (isPending) return <div>Loading</div>
+  if (isPending) return <div>Loading</div>
 
-    return (
-        <section>
-            <ul>
-                {data?.map((post, index) => (
-                    <li key={post.id}>
-                        {index + 1}. {post.title}
-                    </li>
-                ))}
-            </ul>
-            {postCount <= 90 && (
-                <button
-                    onClick={() => setPostCount(postCount + 10)}
-                    disabled={isFetching}
-                >
-                    {isFetching ? 'Loading...' : 'Show More'}
-                </button>
-            )}
-            <style jsx>{`
+  return (
+    <section>
+      <ul>
+        {data?.map((post, index) => (
+          <li key={post.id}>
+            {index + 1}. {post.title}
+          </li>
+        ))}
+      </ul>
+      {postCount <= 90 && (
+        <button
+          onClick={() => setPostCount(postCount + 10)}
+          disabled={isFetching}
+        >
+          {isFetching ? 'Loading...' : 'Show More'}
+        </button>
+      )}
+      <style jsx>{`
         section {
           padding-bottom: 20px;
         }
@@ -64,6 +64,6 @@ export const PostList = () => {
           width: 0;
         }
       `}</style>
-        </section>
-    )
+    </section>
+  )
 }
