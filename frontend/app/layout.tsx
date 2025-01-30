@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils"
 import { fontHeading, fontInter, fontUrbanist } from "../config/fonts"
 import { siteConfig } from "../config/site"
 import { Toaster } from '@/components/ui/toaster';
+import Navbar from '@/components/site/Navbar';
+import Footer from '@/components/site/Footer';
 
 export const viewport: Viewport = {
     width: "device-width",
@@ -79,7 +81,9 @@ export default function RootLayout({
                 )}
             >
                 <ReactQueryProvider>
+                    <Navbar />
                     {children}
+                    <Footer />
                     <Toaster />
                 </ReactQueryProvider>
             </body>
