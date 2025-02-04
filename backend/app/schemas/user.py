@@ -6,7 +6,7 @@ class UserCreate(BaseModel):
     username: str
     email: EmailStr
     password: str
-    has_agreed_terms: bool = False
+    hasAgreedTerms: bool = False
 
 # User Read Model
 class UserRead(BaseModel):

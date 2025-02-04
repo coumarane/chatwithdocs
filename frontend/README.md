@@ -140,6 +140,8 @@ npm install axios
 # npm install react-wrap-balancer
 # npm install nltk
 # npm install compromise
+npm install react-icons --save
+
 ```
 
 - Init shadcn
@@ -172,4 +174,5 @@ npx shadcn@latest add popover
 npx shadcn@latest add progress
 npx shadcn@latest add skeleton
 npx shadcn@latest add toast
+npx shadcn@latest add checkbox
 ```

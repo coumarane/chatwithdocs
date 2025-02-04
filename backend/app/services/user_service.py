@@ -27,7 +27,7 @@ class UserService:
                 detail="User with email already exists"
             )
 
-        if not user_create.has_agreed_terms:
+        if not user_create.hasAgreedTerms:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="User must agree to the terms and privacy policy."
@@ -37,7 +37,7 @@ class UserService:
             user_name=user_create.username,
             email=user_create.email,
             hashed_password=hashed_password,
-            has_agreed_terms=user_create.has_agreed_terms
+            has_agreed_terms=user_create.hasAgreedTerms
         )
 
         # new_user = User.from_schema(user_create, hashed_password)
