@@ -1,18 +1,14 @@
-from uuid import UUID
-
 from pydantic import BaseModel, EmailStr, model_validator
-
+from uuid import UUID  # Import UUID from the uuid module
 
 # User Create Model
 class UserCreate(BaseModel):
     username: str
     email: EmailStr
     password: str
+    has_agreed_terms: bool = False
 
 # User Read Model
-from pydantic import BaseModel, EmailStr, model_validator
-from uuid import UUID  # Import UUID from the uuid module
-
 class UserRead(BaseModel):
     id: UUID
     username: str

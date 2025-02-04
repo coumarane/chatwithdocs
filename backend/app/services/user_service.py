@@ -1,5 +1,7 @@
 from typing import Optional, List
 from fastapi import HTTPException, status
+from sqlalchemy import false
+
 from app.repositories.user_repository import UserRepository
 from app.domain.user import User
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,11 +27,20 @@ class UserService:
                 detail="User with email already exists"
             )
 
+        if not user_create.has_agreed_terms:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User must agree to the terms and privacy policy."
+            )
+
         new_user = User(
             user_name=user_create.username,
             email=user_create.email,
             hashed_password=hashed_password,
+            has_agreed_terms=user_create.has_agreed_terms
         )
+
+        # new_user = User.from_schema(user_create, hashed_password)
         return await self.repo.create_user(new_user, current_user=current_user)
 
     # update user

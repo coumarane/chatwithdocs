@@ -16,10 +16,17 @@ class User(BaseEntity):
     status: Mapped[str] = mapped_column(String(50), nullable=True, default='active')  # e.g., 'active', 'inactive', 'banned'
     is_email_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)  # Tracks email verification status
     verification_token: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), default=uuid.uuid4)  # Token for email verification
+    has_agreed_terms: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     __table_args__ = (
         CheckConstraint('email ~* \'^[^@]+@[^@]+\\.[^@]+$\'', name='chk_email_format'),  # Basic email format validation
     )
+
+    @classmethod
+    def from_schema(cls, user_schema, hashed_password: str):
+        data = user_schema.dict()
+        data["hashed_password"] = hashed_password
+        return cls(**data)
 
     def __repr__(self) -> str:
         return f"User(id={self.id}, email={self.email}, user_name={self.user_name})"

@@ -54,7 +54,7 @@ app.add_middleware(LoggingMiddleware)
 app.include_router(general_router)
 app.include_router(posts_router, prefix="/api")
 app.include_router(user_router, prefix="/api", tags=["users"])
-app.include_router(auth_router, prefix="/api")
+app.include_router(auth_router, prefix="/api", tags=["auth"])
 
 # Instrument the app for Prometheus
 Instrumentator().instrument(app).expose(app)
