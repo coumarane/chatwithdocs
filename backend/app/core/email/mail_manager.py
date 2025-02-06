@@ -1,9 +1,18 @@
 import os
 import mimetypes
+from dataclasses import dataclass
 from email.message import EmailMessage
-from typing import List, Optional
+from typing import List, Optional, Union
 import aiosmtplib
 
+@dataclass
+class Attachment:
+    """
+    Represents an attachment file provided in memory.
+    """
+    filename: str
+    content: bytes
+    mime_type: Optional[str] = None
 
 class MailManagerException(Exception):
     """Custom exception class for MailManager errors."""
@@ -33,7 +42,7 @@ class MailManager:
         subject: str,
         body: str,
         body_type: str = "plain",
-        attachments: Optional[List[str]] = None,
+        attachments: Optional[List[Union[str, Attachment]]] = None,
     ) -> dict:
         """
         Send an email with optional attachments.
@@ -61,28 +70,50 @@ class MailManager:
 
         # Process any attachments
         if attachments:
-            for file_path in attachments:
-                if not os.path.isfile(file_path):
-                    raise MailManagerException(f"Attachment not found: {file_path}")
+            for att in attachments:
+                # If the attachment is a string, treat it as a file path.
+                if isinstance(att, str):
+                    file_path = att
+                    if not os.path.isfile(file_path):
+                        raise MailManagerException(f"Attachment not found: {file_path}")
+                    try:
+                        with open(file_path, "rb") as f:
+                            file_data = f.read()
+                    except Exception as e:
+                        raise MailManagerException(f"Error reading attachment {file_path}: {e}")
 
-                try:
-                    with open(file_path, "rb") as f:
-                        file_data = f.read()
-                except Exception as e:
-                    raise MailManagerException(f"Error reading attachment {file_path}: {e}")
-
-                # Guess the content type and encoding
-                ctype, encoding = mimetypes.guess_type(file_path)
-                if ctype is None or encoding is not None:
-                    ctype = "application/octet-stream"
-                maintype, subtype = ctype.split("/", 1)
-                filename = os.path.basename(file_path)
-                message.add_attachment(
-                    file_data,
-                    maintype=maintype,
-                    subtype=subtype,
-                    filename=filename,
-                )
+                    filename = os.path.basename(file_path)
+                    # Guess the MIME type
+                    ctype, encoding = mimetypes.guess_type(file_path)
+                    if ctype is None or encoding is not None:
+                        ctype = "application/octet-stream"
+                    maintype, subtype = ctype.split("/", 1)
+                    message.add_attachment(
+                        file_data,
+                        maintype=maintype,
+                        subtype=subtype,
+                        filename=filename,
+                    )
+                # If the attachment is an Attachment instance, use its content directly.
+                elif isinstance(att, Attachment):
+                    filename = att.filename
+                    file_data = att.content
+                    # Determine MIME type: use provided mime_type or guess based on filename.
+                    if att.mime_type:
+                        ctype = att.mime_type
+                    else:
+                        ctype, _ = mimetypes.guess_type(filename)
+                        if ctype is None:
+                            ctype = "application/octet-stream"
+                    maintype, subtype = ctype.split("/", 1)
+                    message.add_attachment(
+                        file_data,
+                        maintype=maintype,
+                        subtype=subtype,
+                        filename=filename,
+                    )
+                else:
+                    raise MailManagerException("Attachment must be a file path (str) or an Attachment instance.")
 
         # Send the email asynchronously using aiosmtplib
         try:
