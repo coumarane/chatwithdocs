@@ -15,4 +15,7 @@ class LoginResponse(BaseModel):
     token_type: str
     user: UserRead
 
+class VerifyRequest(BaseModel):
+    email: str
+    code: str
 

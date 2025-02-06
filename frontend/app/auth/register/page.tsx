@@ -62,7 +62,7 @@ export default function RegisterPage() {
             });
 
             setTimeout(() => {
-                router.push("/dashboard"); // Redirect to dashboard
+                router.push("/auth/verify-email"); // Redirect to verify-email
             }, 2000); // Add delay for smooth user experience
         },
         onError: (error: unknown) => {
