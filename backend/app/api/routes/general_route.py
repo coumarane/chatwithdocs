@@ -6,6 +6,7 @@ from fastapi.templating import Jinja2Templates
 from app.core.config import settings
 import aiosmtplib
 
+from app.core.email.mail_manager import MailManager
 from app.schemas.email import EmailRequest
 
 templates = Jinja2Templates(directory="app/templates")
@@ -22,19 +23,19 @@ def get_test():
 
 @router.post("/send-email")
 async def send_email(request: EmailRequest):
-    message = EmailMessage()
-    message["From"] = settings.MAIL_FROM
-    message["To"] = request.to_email
-    message["Subject"] = request.subject
-    message.set_content(request.body)
+    # Create an instance of MailManager
+    mail_manager = MailManager(
+        mail_server = settings.MAIL_SERVER,
+        mail_port = settings.MAIL_PORT,
+        mail_from = settings.MAIL_FROM
+    )
 
-    try:
-        await aiosmtplib.send(
-            message,
-            hostname=settings.MAIL_SERVER,
-            port=settings.MAIL_PORT
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Email sending failed: {e}")
-
-    return {"status": "email sent successfully"}
+    result = await mail_manager.send_email(
+        to_email = request.to_email,
+        subject = request.subject,
+        body = request.body
+        # body="<h1>Hello, World!</h1>",
+        # body_type="html",
+        # attachments=["/path/to/attachment.pdf"],
+    )
+    return result
