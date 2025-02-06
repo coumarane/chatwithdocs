@@ -8,6 +8,7 @@ from app.schemas.auth import LoginResponse, LoginRequest
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.services.user_service import UserService
+from app.services.auth_service import AuthService
 
 router = APIRouter(tags=["authentication"])
 
@@ -30,13 +31,8 @@ async def register(
     db: AsyncSession = Depends(get_db)):
 
     try:
-        service = UserService(db)
-
-        existing_user = await service.get_user_by_username(user_create.username)
-        if existing_user:
-            raise HTTPException(status_code=400, detail="Username already taken")
-
-        new_user = await service.create_user(user_create=user_create)
+        auth_service = AuthService(db)
+        new_user = await auth_service.user_register(user_create=user_create)
         return new_user
     except Exception as e:
         # You could customize error handling here

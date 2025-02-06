@@ -125,4 +125,4 @@ class MailManager:
         except Exception as e:
             raise MailManagerException(f"Email sending failed: {e}")
 
-        return {"status": "email sent successfully"}
+        return {"status": "success", "message": "email sent successfully"}

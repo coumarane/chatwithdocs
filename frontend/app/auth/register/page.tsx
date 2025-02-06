@@ -58,7 +58,7 @@ export default function RegisterPage() {
         onSuccess: () => {
             toast({
                 title: "🎉 Registration Successful!",
-                description: "Redirecting to your dashboard...",
+                description: "Redirecting to verify-email page...",
             });
 
             setTimeout(() => {

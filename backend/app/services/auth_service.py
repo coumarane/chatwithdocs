@@ -6,10 +6,12 @@ from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.email.send_email_verification import send_email_verification
 from app.domain import User
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth import LoginRequest, LoginResponse, VerifyRequest
 from app.schemas.user import UserRead, UserCreate
+from app.utils.helper import generate_verification_code
 from app.utils.password import verify_password
 from app.core.security import create_access_token, create_refresh_token
 from jose import JWTError, jwt
@@ -24,11 +26,16 @@ class AuthService:
         self.repo = UserRepository(db)
 
     async def user_register(self, user_create: UserCreate, current_user: Optional[str] = None) -> User:
-        # Hash the user's password
-        hashed_password = pwd_context.hash(user_create.password)
+
+        existing_user = await self.repo.get_user_by_username(user_create.username)
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already taken"
+            )
 
         # User exists
-        user_email_exists = await self.get_user_by_email(user_create.email)
+        user_email_exists = await self.repo.get_user_by_email(user_create.email)
         if user_email_exists:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -41,6 +48,8 @@ class AuthService:
                 detail="User must agree to the terms and privacy policy."
             )
 
+        # Hash the user's password
+        hashed_password = pwd_context.hash(user_create.password)
         new_user = User(
             user_name=user_create.username,
             email=user_create.email,
@@ -48,16 +57,8 @@ class AuthService:
             has_agreed_terms=user_create.hasAgreedTerms
         )
 
-        # TODO: send email verification with code and expires time
-        """
-        Hello, c.coumarane@gmail.com
-        To continue setting up your account, please verify your account with the code below:
-        438051
-        This code will expire in 5 days.
-        
-        Click the link below to verify:
-        https://yourdomain.com/auth/verify-code
-        """
+        verification_code = generate_verification_code()
+        await send_email_verification(user_create.email, verification_code)
 
         # new_user = User.from_schema(user_create, hashed_password)
         return await self.repo.create_user(new_user, current_user=current_user)
