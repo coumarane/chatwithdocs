@@ -415,12 +415,24 @@ CREATE TABLE email_queue (
 This table tracks how users log in to the system (useful for analytics and auditing).
 ```sql
 CREATE TABLE login_history (
-    login_id SERIAL PRIMARY KEY,
+    login_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     login_method_id UUID REFERENCES login_methods(lid) ON DELETE CASCADE,
     ip_address VARCHAR(50),
     user_agent TEXT,
     login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+# OutboxMessage Table
+Tracks user outbox_message.
+```sql
+CREATE TABLE outbox_message (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_type VARCHAR(255) NOT NULL,    -- e.g., "USER_REGISTERED", "PASSWORD_RESET"
+    payload JSONB NOT NULL,              -- Store event data in JSON format
+    status VARCHAR(20) DEFAULT 'PENDING',-- PENDING, SENT, FAILED
+    created_at TIMESTAMP DEFAULT NOW()
 );
 ```
 
