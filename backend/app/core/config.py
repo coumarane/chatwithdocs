@@ -1,9 +1,13 @@
 import os
+
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 from pydantic import Field
 
 DEBUG = os.environ.get("DEBUG", "").strip().lower() in {"1", "true", "on", "yes"}
 
+# Load environment variables from .env
+load_dotenv()
 
 tags_metadata = [
     {

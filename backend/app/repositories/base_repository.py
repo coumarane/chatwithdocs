@@ -16,6 +16,8 @@ class BaseRepository:
 
         :param db_session: The async database session to be used.
         """
+        if not isinstance(db_session, AsyncSession):
+            raise TypeError(f"Expected AsyncSession, got {type(db_session)}")  # Debugging
         self.db_session = db_session
 
     async def get(self, model: Type[T], id: str) -> Optional[T]:

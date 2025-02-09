@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Optional
-
+import json
 from fastapi import HTTPException, status
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,9 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.email.send_email_verification import send_email_verification
 from app.domain import User
+from app.domain.outbox_message import OutboxMessage
+from app.repositories.outbox_message_repository import OutboxMessageRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth import LoginRequest, LoginResponse, VerifyRequest
 from app.schemas.user import UserRead, UserCreate
+from app.services.outbox_message_service import OutboxMessageService
 from app.utils.helper import generate_verification_code
 from app.utils.password import verify_password
 from app.core.security import create_access_token, create_refresh_token
@@ -24,6 +27,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 class AuthService:
     def __init__(self, db: AsyncSession):
         self.repo = UserRepository(db)
+        self.outbox_service = OutboxMessageService(db)
 
     async def user_register(self, user_create: UserCreate, current_user: Optional[str] = None) -> User:
 
@@ -57,11 +61,13 @@ class AuthService:
             has_agreed_terms=user_create.hasAgreedTerms
         )
 
-        verification_code = generate_verification_code()
-        await send_email_verification(user_create.email, verification_code)
+        # Create user in DB (atomic transaction)
+        user = await self.repo.create_user(new_user, current_user=current_user)
 
-        # new_user = User.from_schema(user_create, hashed_password)
-        return await self.repo.create_user(new_user, current_user=current_user)
+        verification_code = user.verification_token
+        await self.outbox_service.store_user_registration_event(user.id, user_create.email, verification_code)
+
+        return user
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         """

@@ -169,3 +169,26 @@ pytest
 ```bash
 brew install restfox
 ```
+
+# Lint
+Flex8
+
+```bash
+cd /backend
+flake8 .
+```
+
+# Run celery
+```bash
+docker build -t celery_worker -f Dockerfile.celery .
+
+docker run --name celery_worker --network="host" celery_worker
+```
+
+or 
+
+Run from project:
+```bash
+cd /backend/app
+celery -A workers.celery_worker worker --loglevel=debug
+```
