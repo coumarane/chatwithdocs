@@ -6,7 +6,7 @@ from modules.outbox_message.message_status_enum import MessageStatusEnum
 from modules.outbox_message.outbox_message import OutboxMessage
 
 
-class OutboxORM(BaseEntity):
+class OutboxMessageORM(BaseEntity):
     """ORM model for Outbox messages (Persistence Layer)."""
     __tablename__ = 'outbox_message'
 
@@ -16,9 +16,9 @@ class OutboxORM(BaseEntity):
     status: Mapped[MessageStatusEnum] = mapped_column(Enum(MessageStatusEnum), default=MessageStatusEnum.PENDING)
 
     @staticmethod
-    def from_domain(outbox_message) -> "OutboxORM":
+    def from_domain(outbox_message) -> "OutboxMessageORM":
         """Converts a domain OutboxMessage object to an ORM object."""
-        return OutboxORM(
+        return OutboxMessageORM(
             id=outbox_message.id,
             event_type=outbox_message.event_type,
             payload=outbox_message.payload,

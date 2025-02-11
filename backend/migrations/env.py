@@ -25,6 +25,9 @@ if config.config_file_name is not None:
 from core.infrastructure.base_entity import BaseEntity
 target_metadata = BaseEntity.metadata
 
+# Explicitly Import All ORM Models so Alembic Detects Them
+from modules.user.user_orm import UserORM
+from modules.outbox_message.outbox_message_orm import OutboxMessageORM
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
