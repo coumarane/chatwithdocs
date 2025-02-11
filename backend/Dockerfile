@@ -9,7 +9,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 # Copy requirements file to the container
-COPY requirements.txt /app/requirements.txt
+COPY requirements.txt requirements.txt
 
 # Install system dependencies and Python dependencies
 RUN apt-get update && \
@@ -23,10 +23,10 @@ RUN apt-get update && \
 COPY . /app
 
 # Copy the .env file from app/ to the container as .env
-COPY app/.env.docker /app/.env
+#COPY .env /.env
 
 # Expose the default port for Uvicorn
-EXPOSE 8002
+EXPOSE 8000
 
 # Specify the default command to run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8002", "--reload"]
+#CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8002", "--reload"]

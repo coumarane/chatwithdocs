@@ -1,0 +1,170 @@
+services:
+
+  postgres_db:
+    image: postgres:latest
+    container_name: postgres_db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      timeout: 5s
+      interval: 10s
+      retries: 5
+    networks:
+      - backend-network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: always
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - backend-network
+
+  api:
+    container_name: api
+    restart: always
+    build: .
+    command: sh -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    ports:
+      - 8000:8000
+    depends_on:
+      - postgres_db
+    volumes:
+      - .:/app
+    networks:
+      - backend-network
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+
+networks:
+  backend-network:
+    driver: bridge
+
+#  chatwithdoc-api:
+#    container_name: chatwithdoc-api
+#    build:
+#      context: ../../backend
+#      dockerfile: Dockerfile
+#    restart: 'on-failure'
+#    ports:
+#      - 8002:8002
+#    env_file:
+#      - .env
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#    networks:
+#      - backend-network
+#
+#  redis:
+#    image: redis:alpine
+#    container_name: redis-server
+#    restart: always
+#    command: [ "redis-server", "--requirepass", "PassWord123" ]
+#    ports:
+#      - "6379:6379"  # Remove this if not needed externally
+#    environment:
+#      - REDIS_PASSWORD=PassWord123
+#    volumes:
+#      - redis_data:/data  # Persistent storage
+#    networks:
+#      - backend-network
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: "0.5"
+#          memory: "512M"
+#
+#  celery_worker:
+#    container_name: chatwithdoc-celery-worker
+#    build:
+#      context: ../../backend
+#      dockerfile: Dockerfile.celery
+#    restart: always
+#    depends_on:
+#      - redis
+#    environment:
+#      - PYTHONPATH=/app
+#    networks:
+#      - backend-network
+#
+#  celery_beat:
+#    container_name: chatwithdoc-celery-beat
+#    build:
+#      context: ../../backend
+#      dockerfile: Dockerfile.celery
+#    restart: always
+#    command: [ "celery", "-A", "celery_worker.celery", "beat", "--loglevel=info" ]
+#    depends_on:
+#      - redis
+#      - celery_worker
+#    networks:
+#      - backend-network
+#
+#  prometheus:
+#    container_name: chatwithdoc-prometheus
+#    image: prom/prometheus:latest
+#    restart: always
+#    volumes:
+#      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+#    command:
+#      - '--config.file=/etc/prometheus/prometheus.yml'
+#    ports:
+#      - 9090:9090
+#    networks:
+#      - backend-network
+#
+#  grafana:
+#    container_name: chatwithdoc-grafana
+#    image: grafana/grafana:latest
+#    restart: always
+#    ports:
+#      - 3000:3000
+#    env_file:
+#      - ./grafana/grafana.env
+#    volumes:
+#      - grafana_data:/var/lib/grafana
+#    depends_on:
+#      - prometheus
+#    networks:
+#      - backend-network
+#
+#  mailhog:
+#    image: mailhog/mailhog:latest
+#    container_name: mailhog
+#    restart: always
+#    ports:
+#      - "1025:1025"  # SMTP
+#      - "8025:8025"  # Web UI
+#    networks:
+#      - backend-network
+#
+##  mailpit:
+##    image: axllent/mailpit:latest
+##    container_name: mailpit
+##    restart: always
+##    ports:
+##      - "1025:1025"  # SMTP
+##      - "8025:8025"  # Web UI
+##    networks:
+##      - backend-network
+
