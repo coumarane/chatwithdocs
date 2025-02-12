@@ -2,6 +2,7 @@ import uuid
 from typing import Optional
 
 from core.domain.domain_base import BaseDomain
+from modules.user.user_status_enum import UserStatusEnum
 
 
 class User(BaseDomain):
@@ -14,6 +15,9 @@ class User(BaseDomain):
         user_name: Optional[str] = None,
         first_name: Optional[str] = None,
         last_name: Optional[str] = None,
+        status: UserStatusEnum = UserStatusEnum.ACTIVE,
+        is_email_verified: bool = False,
+        verification_token: Optional[uuid.UUID] = None,
         has_agreed_terms: bool = False,
         **kwargs,  # Allows metadata fields (created_at, updated_at, etc.)
     ):
@@ -29,9 +33,9 @@ class User(BaseDomain):
         self.user_name = user_name
         self.first_name = first_name
         self.last_name = last_name
-        self.status = "active"
-        self.is_email_verified = False
-        self.verification_token = uuid.uuid4()
+        self.status = status
+        self.is_email_verified = is_email_verified
+        self.verification_token = verification_token or uuid.uuid4()
         self.has_agreed_terms = has_agreed_terms
 
     @classmethod

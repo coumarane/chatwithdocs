@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from core.infrastructure.base_repository import BaseRepository
 from modules.user.user import User
+from modules.user.user_orm import UserORM
 
 
 class UserRepository(BaseRepository):
@@ -12,10 +13,12 @@ class UserRepository(BaseRepository):
     # create new user
     async def create_user(self, user: User, current_user: Optional[str] = None):
         try:
-            self.db_session.add(user)
+            user_orm = UserORM.from_domain(user)
+            self.db_session.add(user_orm)
             await self.db_session.commit(current_user=current_user)  # Pass current user to session
-            await self.db_session.refresh(user)
-            return user
+            await self.db_session.refresh(user_orm)
+            new_user = user_orm.to_domain()
+            return new_user
         except Exception as e:
             await self.db_session.rollback()
             print(f"Error: {e}")
@@ -31,7 +34,7 @@ class UserRepository(BaseRepository):
         :return: The updated User object, or None if user does not exist.
         """
         try:
-            result = await self.db_session.execute(select(User).where(User.id == user_id))
+            result = await self.db_session.execute(select(UserORM).where(User.id == user_id))
             user = result.scalar_one_or_none()
             if user is None:
                 return  None
@@ -64,7 +67,7 @@ class UserRepository(BaseRepository):
     # delete user
     async def delete_user(self, user_id: int) -> bool:
         try:
-            result = await self.db_session.execute(select(User).where(User.id == user_id))
+            result = await self.db_session.execute(select(UserORM).where(User.id == user_id))
             user = result.scalar_one_or_none()
             if user is None:
                 return False
@@ -86,7 +89,7 @@ class UserRepository(BaseRepository):
         :param hashed_password: The new hashed password.
         :return: The updated User object or None if the user is not found.
         """
-        user = await self.db_session.get(User, user_id)
+        user = await self.db_session.get(UserORM, user_id)
         if user is None:
             return None
 
@@ -101,16 +104,25 @@ class UserRepository(BaseRepository):
             print(f"Error updating password: {e}")
             raise
 
+    async def get_user_by_id(self, user_id: str) -> Optional[User]:
+        """Fetch user from DB and return as domain model."""
+        result = await self.db_session.execute(
+            select(UserORM).filter_by(id=user_id)
+        )
+        user_orm = result.scalars().first()
+        return user_orm.to_domain() if user_orm else None
 
     # get user by email
     async def get_user_by_email(self, email: str):
-        result = await self.db_session.execute(select(User).where(User.email == email))
-        return result.scalar_one_or_none()
+        result = await self.db_session.execute(select(UserORM).where(UserORM.email == email))
+        user_orm = result.scalars().first()
+        return user_orm.to_domain() if user_orm else None
 
     # get user by username
     async def get_user_by_username(self, username: str):
-        result = await self.db_session.execute(select(User).where(User.user_name == username))
-        return result.scalar_one_or_none()
+        result = await self.db_session.execute(select(UserORM).where(UserORM.user_name == username))
+        user_orm = result.scalars().first()
+        return user_orm.to_domain() if user_orm else None
 
     # get all users with pagination
     async def get_paginated_users(self, page: int = 1, page_size: int = 10) -> List[User]:
@@ -121,4 +133,4 @@ class UserRepository(BaseRepository):
         :param page_size: The number of users per page (default: 10).
         :return: List of User objects.
         """
-        return await self.get_paginated(User, page=page, page_size=page_size)
+        return await self.get_paginated(UserORM, page=page, page_size=page_size)
