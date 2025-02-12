@@ -38,5 +38,6 @@ class Settings(BaseSettings):
     MAIL_FROM_NAME: str = Field(default=None, env="MAIL_FROM_NAME")
     DOMAIN: str = Field(default="localhost", env="DOMAIN")  # Default string value
     APP_VERSION: str = Field(default="1.0.0", env="APP_VERSION")
+    APP_ENVIRONMENT: str = Field(default="local.env", env="APP_ENVIRONMENT")
 
 settings = Settings()

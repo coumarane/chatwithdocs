@@ -17,8 +17,7 @@ class UserRepository(BaseRepository):
             self.db_session.add(user_orm)
             await self.db_session.commit(current_user=current_user)  # Pass current user to session
             await self.db_session.refresh(user_orm)
-            new_user = user_orm.to_domain()
-            return new_user
+            return user_orm
         except Exception as e:
             await self.db_session.rollback()
             print(f"Error: {e}")

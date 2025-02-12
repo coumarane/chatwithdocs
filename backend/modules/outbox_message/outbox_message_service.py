@@ -1,9 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 import json
-
+import logging
 from core.email.send_email_verification import send_email_verification
 from modules.outbox_message.outbox_message_repository import OutboxMessageRepository
 
+logger = logging.getLogger(__name__)
 
 class OutboxMessageService:
     def __init__(self, db: AsyncSession):
@@ -16,7 +17,9 @@ class OutboxMessageService:
             "email": email,
             "verification_code": str(verification_code)
         }
-        await self.repo.add_message("USER_REGISTERED", payload)
+        message = await self.repo.add_message("USER_REGISTERED", payload)
+        logger.info(f"✅ Stored USER_REGISTERED event in outbox (ID: {message.id})")
+        return message
 
     async def process_pending_messages(self):
         """ Processes all pending outbox messages """
@@ -26,12 +29,15 @@ class OutboxMessageService:
             payload = json.loads(message.payload)
 
             try:
+                logger.info(f"📨 Processing message ID {message.id} (Event: {message.event_type})")
+
                 if message.event_type == "USER_REGISTERED":
                     await send_email_verification(payload["email"], payload["verification_code"])
 
                 # Mark message as SENT
                 await self.repo.mark_message_as_sent(message.id)
+                logger.info(f"✅ Successfully processed message ID {message.id}")
 
             except Exception as e:
-                print(f"❌ Failed to process message {message.id}: {str(e)}")
+                logger.error(f"❌ Failed to process message {message.id}: {str(e)}", exc_info=True)
                 await self.repo.mark_message_as_failed(message.id)

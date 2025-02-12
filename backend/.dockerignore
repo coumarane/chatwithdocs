@@ -3,6 +3,6 @@
 *.pyd
 __pycache__/
 .env
-.env.docker
+.env.dev
 test/
 migrations/

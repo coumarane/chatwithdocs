@@ -18,6 +18,10 @@ class UserService:
         # Hash the user's password
         hashed_password = pwd_context.hash(user_create.password)
 
+        existing_user = await self.get_user_by_username(user_create.username)
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Username already taken")
+
         # User exists
         user_email_exists = await self.get_user_by_email(user_create.email)
         if user_email_exists:
@@ -39,8 +43,9 @@ class UserService:
             has_agreed_terms=user_create.hasAgreedTerms
         )
 
-        # new_user = User.from_schema(user_create, hashed_password)
-        return await self.repo.create_user(new_user, current_user=current_user)
+        new_user = await self.repo.create_user(new_user, current_user=current_user)
+        user = new_user.to_domain()
+        return user
 
     # update user
     async def update_user(self, user_id: int, user_update: UserUpdate) -> Optional[UserRead]:

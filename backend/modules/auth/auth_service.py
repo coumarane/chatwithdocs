@@ -56,11 +56,12 @@ class AuthService:
         )
 
         # Create user in DB (atomic transaction)
-        user = await self.repo.create_user(new_user, current_user=current_user)
+        registred_user = await self.repo.create_user(new_user, current_user=current_user)
+        user = registred_user.to_domain()
 
         verification_code = user.verification_token
         await self.outbox_service.store_user_registration_event(user.id, user_create.email, verification_code)
-
+        
         return user
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:

@@ -24,11 +24,6 @@ async def create_user(
     db: AsyncSession = Depends(get_db),
 ):
     service = UserService(db)
-
-    existing_user = await service.get_user_by_username(user_create.username)
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Username already taken")
-
     user = await service.create_user(user_create=user_create)
     return user
 
