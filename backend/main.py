@@ -6,7 +6,6 @@ from api.routes.general_route import router as general_router
 from api.routes.users_route import router as user_router
 from api.routes.auth_route import router as auth_router
 from dotenv import load_dotenv
-
 from core.config.config import DEBUG, tags_metadata
 from core.lifecycle import app_lifespan
 from core.middleware.login_middleware import LoggingMiddleware

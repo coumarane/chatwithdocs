@@ -55,9 +55,69 @@ services:
     stdin_open: true  # Keep the container interactive
     tty: true         # Enable terminal support
 
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: always
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--bind", "0.0.0.0"]
+    ports:
+      - "6379:6379"  # Remove this if not needed externally
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data  # Persistent storage
+    networks:
+      - backend-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+
+  celery_worker:
+    container_name: celery-worker
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    restart: always
+    env_file:
+      - .env.dev
+    depends_on:
+      - redis
+      - api
+    environment:
+      - PYTHONPATH=/app
+    networks:
+      - backend-network
+
+  celery_beat:
+    container_name: celery-beat
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile.celerybeat
+    env_file:
+      - .env.dev
+    depends_on:
+      - redis
+      - celery_worker
+    networks:
+      - backend-network
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    restart: always
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - backend-network
+
 volumes:
   postgres_data:
   pgadmin_data:
+  redis_data:
 
 networks:
   backend-network:

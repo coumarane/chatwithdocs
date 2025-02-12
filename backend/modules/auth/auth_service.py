@@ -61,7 +61,7 @@ class AuthService:
 
         verification_code = user.verification_token
         await self.outbox_service.store_user_registration_event(user.id, user_create.email, verification_code)
-        
+
         return user
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
