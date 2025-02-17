@@ -13,6 +13,8 @@ class Document(BaseEntity):
     file_path: Mapped[str] = mapped_column(Text, nullable=False)
     file_size: Mapped[int] = mapped_column(BigInteger, nullable=False)
     file_type: Mapped[str] = mapped_column(String(50), nullable=True)  # File format (e.g., pdf, docx, txt)
+    storage_uri:Mapped[str] = mapped_column(String, nullable=False)
+
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)  # Versioning for document updates
     status: Mapped[str] = mapped_column(String(50), nullable=False, default='uploaded')  # Detailed status tracking
     failure_reason: Mapped[str] = mapped_column(Text, nullable=True)  # Error details if processing fails

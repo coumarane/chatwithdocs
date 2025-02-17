@@ -28,6 +28,7 @@ target_metadata = BaseEntity.metadata
 # Explicitly Import All ORM Models so Alembic Detects Them
 from modules.user.user_orm import UserORM
 from modules.outbox_message.outbox_message_orm import OutboxMessageORM
+from modules.document.infrastructure.document_orm import DocumentORM
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.

@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.routes.general_route import router as general_router
 from api.routes.users_route import router as user_router
 from api.routes.auth_route import router as auth_router
+from api.routes.document_router import router as document_router
 from dotenv import load_dotenv
 from core.config.config import DEBUG, tags_metadata
 from core.lifecycle import app_lifespan
@@ -52,6 +53,7 @@ app.add_middleware(LoggingMiddleware)
 app.include_router(general_router)
 app.include_router(user_router, prefix="/api", tags=["users"])
 app.include_router(auth_router, prefix="/api", tags=["auth"])
+app.include_router(document_router, prefix="/api", tags=["document"])
 
 # Instrument the app for Prometheus
 Instrumentator().instrument(app).expose(app)
