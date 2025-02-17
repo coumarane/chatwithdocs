@@ -1,5 +1,6 @@
 import uuid
-from sqlalchemy import Column, String, Boolean, Text, Enum, UUID
+import datetime
+from sqlalchemy import Column, String, Boolean, Text, Enum, UUID, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 from core.infrastructure.base_entity import BaseEntity# Import domain enum
 from modules.user.user import User
@@ -20,6 +21,9 @@ class UserORM(BaseEntity):
     status: Mapped[UserStatusEnum] = mapped_column(Enum(UserStatusEnum, name="userstatusenum", create_type=False), nullable=False, default=UserStatusEnum.ACTIVE)
     is_email_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     verification_token: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), default=uuid.uuid4)
+    verification_token_expires_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     has_agreed_terms: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     @staticmethod
@@ -35,6 +39,7 @@ class UserORM(BaseEntity):
             status=UserStatusEnum(user.status),
             is_email_verified=user.is_email_verified,
             verification_token=user.verification_token,
+            verification_token_expires_at=user.verification_token_expires_at,
             has_agreed_terms=user.has_agreed_terms,
             created_at=user.created_at,
             updated_at=user.updated_at,
@@ -54,6 +59,7 @@ class UserORM(BaseEntity):
             status=UserStatusEnum(self.status),
             is_email_verified=self.is_email_verified,
             verification_token=self.verification_token,
+            verification_token_expires_at=self.verification_token_expires_at,
             has_agreed_terms=self.has_agreed_terms,
             created_at=self.created_at,
             updated_at=self.updated_at,

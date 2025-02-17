@@ -1,4 +1,6 @@
 import uuid
+
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 from core.domain.domain_base import BaseDomain
@@ -18,6 +20,7 @@ class User(BaseDomain):
         status: UserStatusEnum = UserStatusEnum.ACTIVE,
         is_email_verified: bool = False,
         verification_token: Optional[uuid.UUID] = None,
+        verification_token_expires_at: datetime = None,
         has_agreed_terms: bool = False,
         **kwargs,  # Allows metadata fields (created_at, updated_at, etc.)
     ):
@@ -36,6 +39,7 @@ class User(BaseDomain):
         self.status = status
         self.is_email_verified = is_email_verified
         self.verification_token = verification_token or uuid.uuid4()
+        self.verification_token_expires_at = verification_token_expires_at
         self.has_agreed_terms = has_agreed_terms
 
     @classmethod
@@ -64,6 +68,29 @@ class User(BaseDomain):
             self.first_name = first_name
         if last_name:
             self.last_name = last_name
+
+    @staticmethod
+    def generate_token_expiration() -> datetime:
+        """Generates a verification token expiration (default: 24 hours)."""
+        return datetime.utcnow() + timedelta(hours=24)
+
+    def set_generate_token_expiration(self) -> datetime:
+        """Generates a verification token expiration (default: 24 hours)."""
+        self.verification_token_expires_at = datetime.utcnow() + timedelta(hours=24)
+
+    def regenerate_verification_token(self):
+        """Generates a new verification token and expiration."""
+        self.verification_token = uuid.uuid4()
+        self.verification_token_expires_at = self._generate_token_expiration()
+
+    def is_verification_token_valid(self) -> bool:
+        """Checks if the verification token is still valid."""
+        if not self.verification_token_expires_at:
+            return False
+
+        # Convert to timezone-aware datetime
+        now = datetime.now(timezone.utc)
+        return now < self.verification_token_expires_at
 
     def __repr__(self) -> str:
         return f"User(id={self.id}, email={self.email}, status={self.status})"

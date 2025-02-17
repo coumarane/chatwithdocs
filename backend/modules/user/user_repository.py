@@ -1,4 +1,7 @@
+import uuid
 from typing import Optional, List
+
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from core.infrastructure.base_repository import BaseRepository
@@ -9,6 +12,18 @@ from modules.user.user_orm import UserORM
 class UserRepository(BaseRepository):
     def __init__(self, db: AsyncSession):
         super().__init__(db)  # Initialize BaseRepository with db session
+
+    async def update_fields(self, user_id: str, fields: dict):
+        """Updates specific fields of a user by user ID."""
+        if "verification_token" in fields and fields["verification_token"] is None:
+            fields["verification_token"] = uuid.uuid4()  # Set default UUID instead of NULL
+        stmt = (
+            update(UserORM)
+            .where(UserORM.id == user_id)
+            .values(**fields)
+        )
+        await self.db_session.execute(stmt)
+        await self.db_session.commit()
 
     # create new user
     async def create_user(self, user: User, current_user: Optional[str] = None):

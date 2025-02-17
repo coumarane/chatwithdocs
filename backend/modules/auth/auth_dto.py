@@ -18,3 +18,7 @@ class VerifyRequest(BaseModel):
     email: str
     code: str
 
+class VerifyResponse(BaseModel):
+    result: bool
+    message: str
+

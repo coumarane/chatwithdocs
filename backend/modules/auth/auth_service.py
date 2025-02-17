@@ -7,7 +7,7 @@ from core.config.config import settings
 from core.security.security import create_access_token, create_refresh_token
 from core.utils.password import verify_password
 from jose import jwt
-from modules.auth.auth_dto import LoginResponse, LoginRequest, VerifyRequest
+from modules.auth.auth_dto import LoginResponse, LoginRequest, VerifyRequest, VerifyResponse
 from modules.outbox_message.outbox_message_service import OutboxMessageService
 from modules.user.user import User
 from modules.user.user_dto import UserCreate, UserRead
@@ -54,6 +54,7 @@ class AuthService:
             hashed_password=hashed_password,
             has_agreed_terms=user_create.hasAgreedTerms
         )
+        new_user.set_generate_token_expiration()
 
         # Create user in DB (atomic transaction)
         registred_user = await self.repo.create_user(new_user, current_user=current_user)
@@ -113,12 +114,24 @@ class AuthService:
             user=user_read,
         )
 
-    async def verify_code(self, request: VerifyRequest):
-        user = self.repo.get_user_by_email(request.email)
+    async def verify_code(self, request: VerifyRequest) -> VerifyResponse:
+        user = await self.repo.get_user_by_email(request.email)
 
-        if not user or user["code"] != request.code:
+        if not user or str(user.verification_token) != request.code:
             raise HTTPException(status_code=400, detail="Invalid verification code")
 
-        # TODO: Update user table email_verified = true
+        if not user.is_verification_token_valid():
+            return VerifyResponse(result=False, message="Email verified failed")
 
-        return {"message": "Email verified successfully"}
+        user.is_email_verified = True
+        user.verification_token = None
+        user.verification_token_expires_at = None
+        await self.repo.update_fields(
+                user_id=str(user.id),
+                fields={
+                    "is_email_verified": True,
+                    "verification_token": None,
+                    "verification_token_expires_at": None,
+                },
+            )
+        return VerifyResponse(result=True, message="Email verified successfully")

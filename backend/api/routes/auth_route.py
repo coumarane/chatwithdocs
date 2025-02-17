@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.infrastructure.database import get_db
-from modules.auth.auth_dto import LoginResponse, LoginRequest
+from modules.auth.auth_dto import LoginResponse, LoginRequest, VerifyRequest, VerifyResponse
 from modules.auth.auth_service import AuthService
 from modules.user.user_dto import UserCreate, UserRead
 
@@ -44,3 +44,14 @@ async def login(
     """
     service = AuthService(db)
     return await service.login(login_request)
+
+@router.post("/verify_code/", response_model=VerifyResponse)
+async def login(
+    verify_request: VerifyRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Authenticate the user and return an access token and refresh token.
+    """
+    service = AuthService(db)
+    return await service.verify_code(verify_request)
