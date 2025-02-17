@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from uuid import UUID
 
-
+from core.dependencies import get_current_user
 from core.infrastructure.database import get_db
 from modules.document.application.document_service import DocumentService
 from modules.document.infrastructure.document_repository import DocumentRepository
@@ -16,7 +16,11 @@ from modules.document.application.document_dto import (
     DocumentResponse,
 )
 
-router = APIRouter(prefix="/documents", tags=["Documents"])
+router = APIRouter(
+    prefix="/documents",
+    tags=["Documents"],
+    dependencies=[Depends(get_current_user)]
+)
 
 # ------------------------------------
 # Dependency Injection

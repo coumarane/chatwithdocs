@@ -16,6 +16,9 @@ class DocumentService:
 
     async def create_document(self, request: DocumentCreateRequest) -> DocumentResponse:
         """Creates a new document."""
+
+        # Check if user is valid and has permission
+
         document = Document(
             user_id=request.user_id,
             file_name=request.file_name,
