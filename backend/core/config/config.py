@@ -37,7 +37,19 @@ class Settings(BaseSettings):
     MAIL_FROM: str = Field(default=None, env="MAIL_FROM")
     MAIL_FROM_NAME: str = Field(default=None, env="MAIL_FROM_NAME")
     DOMAIN: str = Field(default="localhost", env="DOMAIN")  # Default string value
+
+    # MinIO Configuration (Fixed with Type Annotations)
+    MINIO_ENDPOINT: str | None = Field(default=None, env="MINIO_ENDPOINT")
+    MINIO_ACCESS_KEY: str | None = Field(default=None, env="MINIO_ACCESS_KEY")
+    MINIO_SECRET_KEY: str | None = Field(default=None, env="MINIO_SECRET_KEY")
+    MINIO_BUCKET: str | None = Field(default=None, env="MINIO_BUCKET")
+
+    # Flower Configuration
+    CELERY_BROKER_URL: str | None = Field(default=None, env="CELERY_BROKER_URL")
+    FLOWER_USER: str | None = Field(default=None, env="FLOWER_USER")
+    FLOWER_PASSWORD: str | None = Field(default=None, env="FLOWER_PASSWORD")
+
     APP_VERSION: str = Field(default="1.0.0", env="APP_VERSION")
-    APP_ENVIRONMENT: str = Field(default="local.env", env="APP_ENVIRONMENT")
+    APP_ENVIRONMENT: str = Field(default="dev.env", env="APP_ENVIRONMENT")
 
 settings = Settings()

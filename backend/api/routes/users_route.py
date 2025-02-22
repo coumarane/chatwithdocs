@@ -18,6 +18,11 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
     return {"username": current_user.user_name, "email": current_user.email}
 
 
+@router.get("/my-permissions/")
+async def get_user_permissions(current_user: User = Depends(get_current_user)):
+    pass
+
+
 @router.post("/users/", response_model=UserRead)
 async def create_user(
     user_create: UserCreate,  # Use the Pydantic schema

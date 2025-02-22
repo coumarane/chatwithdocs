@@ -7,6 +7,8 @@ from modules.document.application.document_dto import (
     DocumentUpdateRequest,
     DocumentResponse,
 )
+from modules.document.security.permission_checker import PermissionChecker
+
 
 class DocumentService:
     """Application Service: Contains use case logic for Documents."""
@@ -17,7 +19,10 @@ class DocumentService:
     async def create_document(self, request: DocumentCreateRequest) -> DocumentResponse:
         """Creates a new document."""
 
-        # Check if user is valid and has permission
+        # Check Permissions
+        # PermissionChecker.check_document_upload_permission(
+        #     current_user
+        # )
 
         document = Document(
             user_id=request.user_id,
