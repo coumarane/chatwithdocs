@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from core.config.config import DEBUG, tags_metadata
 from core.lifecycle import app_lifespan
 from core.middleware.login_middleware import LoggingMiddleware
+from fastapi_pagination import add_pagination
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -48,6 +49,9 @@ app.add_middleware(
 
 # Add the logging middleware
 app.add_middleware(LoggingMiddleware)
+
+# Add pagination to the app
+add_pagination(app)
 
 # Include API routes
 app.include_router(general_router)

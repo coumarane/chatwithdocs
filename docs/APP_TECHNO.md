@@ -1,5 +1,4 @@
-For your Retrieval-Augmented Generation (RAG) SaaS platform with Agent AI, the document processing pipeline involves multiple stages to ensure efficient storage, retrieval, and conversational interaction. Below is a structured breakdown of the process and technologies that can be used.
-
+The Retrieval-Augmented Generation (RAG) SaaS platform with Agent AI
 
 # 1. User Uploads Document
 ## Process

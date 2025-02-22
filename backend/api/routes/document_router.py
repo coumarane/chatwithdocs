@@ -8,6 +8,7 @@ from uuid import UUID
 
 from core.dependencies import get_current_user
 from core.infrastructure.database import get_db
+from core.storage.document_storage_manager import DocumentStorageManager
 from modules.document.application.document_service import DocumentService
 from modules.document.infrastructure.document_repository import DocumentRepository
 from modules.document.application.document_dto import (
@@ -22,6 +23,8 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)]
 )
 
+storage_manager = DocumentStorageManager()  # Initialize storage manager
+
 # ------------------------------------
 # Dependency Injection
 # ------------------------------------
@@ -29,13 +32,13 @@ def get_document_service(session: AsyncSession = Depends(get_db)) -> DocumentSer
     repository = DocumentRepository(session)
     return DocumentService(repository)
 
-async def store_file(file: UploadFile) -> str:
-    """Simulates storing a file and returns a storage URI."""
-    # Here you can integrate AWS S3, Azure Blob, or GCP Storage
-    file_id = str(uuid.uuid4())
-    storage_uri = f"s3://bucket/documents/{file_id}-{file.filename}"
-    print(f"File stored at: {storage_uri}")  # Simulating storage
-    return storage_uri
+# async def store_file(file: UploadFile) -> str:
+#     """Simulates storing a file and returns a storage URI."""
+#     # Here you can integrate AWS S3, Azure Blob, or GCP Storage
+#     file_id = str(uuid.uuid4())
+#     storage_uri = f"s3://bucket/documents/{file_id}-{file.filename}"
+#     print(f"File stored at: {storage_uri}")  # Simulating storage
+#     return storage_uri
 
 async def generate_embedding_uri(file_name: str) -> str:
     """Simulates generating an embedding URI for the document."""
@@ -62,14 +65,8 @@ async def upload_document(
 ):
     """Uploads a document, extracts metadata, and creates a record."""
 
-    # Extract File Metadata
-    file_name = file.filename
-    file_size = len(await file.read())  # Get file size
-    file_type = file.content_type or mimetypes.guess_type(file.filename)[0] or "application/octet-stream"
-    file_extension = file.filename.split(".")[-1]
-
-    # Store the File (Simulated storage)
-    storage_uri = await store_file(file)
+    # Store file in MinIO using DocumentStorageManager
+    storage_uri = await storage_manager.store_file(file, str(user_id))
 
     # Generate embedding URI for vectorized content
     embedding_uri = await generate_embedding_uri(file.filename)
@@ -77,10 +74,10 @@ async def upload_document(
     # Create Document Request DTO
     create_request = DocumentCreateRequest(
         user_id=user_id,
-        file_name=file_name,
-        file_type=file_type,
-        file_extension=file_extension,
-        file_size=file_size,
+        file_name=file.filename,
+        file_type=file.content_type or "application/octet-stream",
+        file_extension=file.filename.split(".")[-1].lower(),
+        file_size=len(await file.read()),
         storage_uri=storage_uri,
         embedding_uri=embedding_uri,
         title=title,
