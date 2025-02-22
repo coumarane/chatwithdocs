@@ -1,0 +1,19 @@
+services:
+  frontend:
+    container_name: frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002" # Expose the frontend on localhost:3002
+    env_file:
+      - .env.dev
+    volumes:
+      - .:/app # Mount local directory for development mode
+      - /app/node_modules # Avoid overwriting node_modules
+    networks:
+      - frontend-network
+    restart: unless-stopped
+
+networks:
+  frontend-network:

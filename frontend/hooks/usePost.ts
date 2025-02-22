@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_API || "http://127.0.0.1:8000";
+
 export type Post = {
   id: number;
   title: string;
@@ -8,7 +10,7 @@ export type Post = {
 
 // Fetch posts from FastAPI backend
 const fetchPosts = async (limit: number): Promise<Post[]> => {
-  const response = await fetch('http://127.0.0.1:8000/api/posts');
+  const response = await fetch(`${API_URL}/api/posts`);
   if (!response.ok) {
     throw new Error('Failed to fetch posts');
   }

@@ -47,6 +47,7 @@ Stores larger files or raw data that may not fit in the database.
 Accessed by the BackEnd for read/write operations.
 
 # Project Structure
+```
 /.github
 /backend
 --/app
@@ -57,20 +58,19 @@ Accessed by the BackEnd for read/write operations.
 /docs
 /frontend
 /infra
-
+```
 
 # Run Apps
 
-## Docker compose
+## Run backend, database, tools
 ```bash
-cd infra
+cd backend
 docker-compose up --build -d
 ```
 
-## Db Migrations
+## Run frontend
 ```bash
-cd backend
-alembic revision --autogenerate -m "Init database"  
-alembic upgrade head  
+cd frontend
+docker-compose up --build -d
 ```
 
