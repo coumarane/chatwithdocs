@@ -1,7 +1,6 @@
-# Use lightweight Python image
 FROM python:3.13-slim AS base
 
-# Set environment variables for security & performance
+# Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
@@ -11,22 +10,22 @@ WORKDIR /app
 # Create a non-root user for security
 RUN addgroup --system celery && adduser --system --ingroup celery celery
 
-# Install necessary system dependencies
+# Install necessary dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*  # Cleanup package manager cache
 
-# Install dependencies separately for better caching
+# Install dependencies separately for caching
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy the application code
 COPY . .
 
 # Change ownership to non-root user
 RUN chown -R celery:celery /app
 USER celery
 
-# Define entrypoint for Celery worker
-ENTRYPOINT ["celery", "-A", "workers.celery_worker", "worker", "--loglevel=info"]
+# Define entrypoint for Celery Beat
+ENTRYPOINT ["celery", "-A", "workers.celery_beat", "beat", "--loglevel=info", "--scheduler", "celery.beat.PersistentScheduler"]

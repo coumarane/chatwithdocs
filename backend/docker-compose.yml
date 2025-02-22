@@ -1,0 +1,208 @@
+services:
+
+#  init-env:
+#    image: alpine:latest
+#    container_name: init-env
+#    volumes:
+#      - .:/app
+#    working_dir: /app
+#    entrypoint: [ "/bin/sh", "-c" ]
+#    command:
+#      - |
+#        chmod +x generate_env.sh && ./generate_env.sh
+#    depends_on:
+#      - minio
+
+  postgres_db:
+    image: postgres:latest
+    container_name: postgres_db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      timeout: 5s
+      interval: 10s
+      retries: 5
+    networks:
+      - backend-network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: always
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - backend-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    ports:
+      - "9000:9000"  # MinIO API
+      - "9001:9001"  # MinIO Console UI
+    volumes:
+      - minio_data:/data
+    env_file:
+      - .env.dev
+    networks:
+      - backend-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio_init:
+    image: minio/mc:latest
+    container_name: minio_init
+    depends_on:
+      minio:
+        condition: service_healthy  # Ensures MinIO is fully ready before running this service
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        echo 'Waiting for MinIO to be ready...';
+        sleep 5;
+        echo 'Setting up MinIO Client...';
+        /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY};
+        echo 'Checking if bucket exists...';
+        if /usr/bin/mc ls myminio/chatdoc-bucket >/dev/null 2>&1; then
+          echo 'Bucket exists. Removing...';
+          /usr/bin/mc rm -r --force myminio/chatdoc-bucket;
+        else
+          echo 'Bucket does not exist, skipping removal.';
+        fi
+        echo 'Creating new bucket...';
+        /usr/bin/mc mb myminio/chatdoc-bucket;
+        echo 'Setting bucket policy...';
+        /usr/bin/mc anonymous set download myminio/chatdoc-bucket;
+        exit 0;
+    env_file:
+      - .env.dev
+    networks:
+      - backend-network
+
+  api:
+    container_name: api
+    restart: always
+    build: .
+    command: sh -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    env_file:
+      - .env.dev
+    ports:
+      - 8000:8000
+    depends_on:
+      - postgres_db
+      - minio
+    volumes:
+      - .:/app
+    networks:
+      - backend-network
+    stdin_open: true  # Keep the container interactive
+    tty: true         # Enable terminal support
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: always
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--bind", "0.0.0.0"]
+    ports:
+      - "6379:6379"  # Remove this if not needed externally
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data  # Persistent storage
+    networks:
+      - backend-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+
+  celery_worker:
+    container_name: celery-worker
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    restart: always
+    env_file:
+      - .env.dev
+    depends_on:
+      - redis
+      - api
+    environment:
+      - PYTHONPATH=/app
+    networks:
+      - backend-network
+
+  celery_beat:
+    container_name: celery-beat
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile.celerybeat
+    env_file:
+      - .env.dev
+    depends_on:
+      - redis
+      - celery_worker
+    networks:
+      - backend-network
+
+  flower:
+    image: mher/flower:latest
+    container_name: flower
+    restart: always
+    env_file:
+      - .env.dev
+    depends_on:
+      - redis
+      - celery_worker
+    ports:
+      - "5555:5555"  # Flower UI
+    command: >
+      celery --broker=${CELERY_BROKER_URL} flower --port=5555 --address=0.0.0.0 --basic_auth=${FLOWER_USER}:${FLOWER_PASSWORD}
+    networks:
+      - backend-network
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    restart: always
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - backend-network
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+  redis_data:
+  minio_data:
+
+networks:
+  backend-network:
+    driver: bridge
