@@ -70,7 +70,7 @@ docker-compose up --build -d
 
 ## Run frontend
 ```bash
-cd backend
+cd frontend
 docker-compose up --build -d
 ```
 
