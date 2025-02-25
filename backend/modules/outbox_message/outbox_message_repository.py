@@ -2,7 +2,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import update
 import json
-from sqlalchemy.orm import selectinload
 from core.infrastructure.base_repository import BaseRepository
 from modules.outbox_message.message_status_enum import MessageStatusEnum
 from modules.outbox_message.outbox_message_orm import OutboxMessageORM
@@ -25,11 +24,13 @@ class OutboxMessageRepository(BaseRepository):
         return message
 
     async def get_pending_messages(self) -> list[OutboxMessageORM]:
-        """ Fetch all pending messages as ORM objects """
-        result = await self.db_session.execute(
-            select(OutboxMessageORM).where(OutboxMessageORM.status == "PENDING")
-        )
-        return result.scalars().all()  # Returns ORM instances
+        """Fetch all pending messages safely."""
+        async with self.db_session.begin():  # Ensures transaction is active
+            result = await self.db_session.execute(
+                select(OutboxMessageORM).where(OutboxMessageORM.status == MessageStatusEnum.PENDING.value)
+            )
+            messages = result.scalars().all()
+            return messages or []  # Ensure it returns an empty list, not None
 
     async def mark_message_as_sent(self, message_id: int) -> None:
         """ Mark a message as SENT """

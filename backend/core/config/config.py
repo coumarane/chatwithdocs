@@ -49,6 +49,12 @@ class Settings(BaseSettings):
     FLOWER_USER: str | None = Field(default=None, env="FLOWER_USER")
     FLOWER_PASSWORD: str | None = Field(default=None, env="FLOWER_PASSWORD")
 
+    # ChromaDb Configuration
+    CHROMADB_HOST: str | None = Field(default=None, env="CHROMADB_HOST")
+    CHROMADB_PORT: int | None = Field(default=None, env="CHROMADB_PORT")
+    CHROMA_SERVER_AUTHN_CREDENTIALS: str | None = Field(default=None, env="CHROMA_SERVER_AUTHN_CREDENTIALS")
+    CHROMA_SERVER_AUTHN_PROVIDER: str | None = Field(default=None, env="CHROMA_SERVER_AUTHN_PROVIDER")
+
     APP_VERSION: str = Field(default="1.0.0", env="APP_VERSION")
     APP_ENVIRONMENT: str = Field(default="dev.env", env="APP_ENVIRONMENT")
 

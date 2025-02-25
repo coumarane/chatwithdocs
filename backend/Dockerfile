@@ -12,12 +12,19 @@ WORKDIR /app
 COPY requirements.txt requirements.txt
 
 # Install system dependencies and Python dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc && \
-    pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
-    apt-get remove -y gcc && apt-get autoremove -y && apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+#RUN apt-get update && \
+#    apt-get install -y --no-install-recommends gcc && \
+#    pip install --no-cache-dir --upgrade pip && \
+#    pip install --no-cache-dir -r requirements.txt && \
+#    apt-get remove -y gcc && apt-get autoremove -y && apt-get clean && \
+#    rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential cmake gcc g++ python3-dev \
+    && pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt \
+    && apt-get remove -y gcc && apt-get autoremove -y \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copy the application code to the container
 COPY . /app

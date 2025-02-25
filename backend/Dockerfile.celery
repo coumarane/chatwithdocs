@@ -12,8 +12,11 @@ WORKDIR /app
 RUN addgroup --system celery && adduser --system --ingroup celery celery
 
 # Install necessary system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
     gcc \
+    g++ \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*  # Cleanup package manager cache
 

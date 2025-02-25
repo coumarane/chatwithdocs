@@ -1,7 +1,7 @@
 import mimetypes
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, status, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, status, Form, requests
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from uuid import UUID
@@ -9,6 +9,7 @@ from uuid import UUID
 from core.dependencies import get_current_user
 from core.infrastructure.database import get_db
 from core.storage.document_storage_manager import DocumentStorageManager
+from core.vectorstore.vector_store import VectorStore
 from modules.document.application.document_service import DocumentService
 from modules.document.infrastructure.document_repository import DocumentRepository
 from modules.document.application.document_dto import (
@@ -52,6 +53,18 @@ async def generate_embedding_uri(file_name: str) -> str:
 # ------------------------------------
 # Routes
 # ------------------------------------
+
+vector_store = VectorStore()
+
+@router.get("/health")
+async def health_check():
+    """Check if ChromaDB is running and authenticated."""
+    response = requests.get(f"{vector_store.chroma_url}/api/v1/status", headers=vector_store.headers)
+    if response.status_code == 200:
+        return {"status": "ChromaDB is running and authenticated!"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to authenticate with ChromaDB")
+
 
 @router.post("/upload", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
 async def upload_document(

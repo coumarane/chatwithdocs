@@ -12,7 +12,7 @@ services:
 #        chmod +x generate_env.sh && ./generate_env.sh
 #    depends_on:
 #      - minio
-
+#
   postgres_db:
     image: postgres:latest
     container_name: postgres_db
@@ -100,6 +100,35 @@ services:
         exit 0;
     env_file:
       - .env.dev
+    networks:
+      - backend-network
+
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: chromadb
+    restart: always
+    ports:
+      - "8800:8000"
+    env_file:
+      - .env.dev
+    environment:
+      - CHROMA_SERVER_AUTHN_CREDENTIALS=${CHROMA_SERVER_AUTHN_CREDENTIALS}
+      - CHROMA_SERVER_AUTHN_PROVIDER=${CHROMA_SERVER_AUTHN_PROVIDER}
+    volumes:
+      - chroma_data:/index_data
+    networks:
+      - backend-network
+
+  chromadb_admin:
+    image: fengzhichao/chromadb-admin:latest
+    container_name: chromadbAdmin
+    restart: always
+    ports:
+      - "8801:3000"
+    env_file:
+      - .env.dev
+    depends_on:
+      - chromadb
     networks:
       - backend-network
 
@@ -202,6 +231,7 @@ volumes:
   pgadmin_data:
   redis_data:
   minio_data:
+  chroma_data:
 
 networks:
   backend-network:
