@@ -61,7 +61,7 @@ CREATE TABLE role_permissions (
 
 
 # Add a login_methods Table
-This table defines the different login methods available in your application, such as "email/password" or social logins.
+This table defines the different login methods available in the application, such as "email/password" or social logins.
 ```sql
 CREATE TABLE login_methods (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
