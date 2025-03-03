@@ -1,0 +1,106 @@
+
+
+Exploring Haystack, ChromaDB, and OpenAI: A Step-by-Step Guide to Simple RAG Application
+
+Follow
+4 min read · Jun 19, 2024
+
+
+
+Introduction to Haystack
+Haystack is a versatile framework designed for scalable and efficient information retrieval tasks. It empowers developers to build robust pipelines for document indexing, querying, and intelligent content generation. In this tutorial, we’ll explore how to harness Haystack’s capabilities in conjunction with ChromaDB and OpenAI’s language model to create a sophisticated system for managing and generating content.
+
+Step 1: Getting Started with OpenAI
+Signing Up and Getting an API Key
+To begin, sign up for an account on OpenAI’s website and generate an API key from your account settings. This key will enable integration with OpenAI’s language models.
+
+Step 2: Setting Up the Development Environment
+Creating a Python Environment
+Open your preferred integrated development environment (IDE) such as Visual Studio Code.
+Create a new Python environment to manage dependencies and ensure a clean setup:
+python -m venv haystack_env
+Installing Dependencies
+Ensure the necessary Python packages are installed for our project:
+
+pip install haystack-ai
+pip install trafilatura
+pip install chroma-haystack
+These packages include Haystack for building pipelines, ChromaDB for document storage, and utilities for integrating with OpenAI.
+
+Step 3: Understanding and Implementing the Code
+Let’s dive into the Python code that demonstrates the integration of Haystack with ChromaDB for document storage and retrieval, OpenAI for text generation, and RAG (Retrieval-Augmented Generation).
+
+import os
+from pathlib import Path
+
+from haystack import Pipeline
+from haystack.dataclasses import Document
+from haystack.components.writers import DocumentWriter
+
+from haystack_integrations.document_stores.chroma import ChromaDocumentStore
+from haystack_integrations.components.retrievers.chroma import ChromaQueryTextRetriever
+Imports: These lines import necessary modules and classes:
+
+os and Path from pathlib are standard Python modules for interacting with the operating system and filesystem paths.
+Pipeline, Document, and DocumentWriter are components from the Haystack library for creating a pipeline to index and query documents.
+ChromaDocumentStore and ChromaQueryTextRetriever are components from the haystack_integrations package, specifically tailored for document storage and text retrieval using Chroma.
+document_store = ChromaDocumentStore(persist_path="/Users/Coumar/Downloads/chromadb/")
+ChromaDocumentStore: Initializes a document store (ChromaDocumentStore) with a specified persistent path (persist_path). This is where the documents will be stored.
+
+documents = [
+    Document(content="This is senthil. he lives in tamil nadu", meta={"title": "A"}),
+    Document(content="python is simplest programming language", meta={"title": "B"}),
+    Document(content="senthil interested to write python", meta={"title": "C"})
+    
+]
+Documents: Defines a list of Document objects, each containing textual content and metadata (in this case, a title). These are the documents that will be indexed into document_store.
+
+indexing = Pipeline()
+indexing.add_component("writer", DocumentWriter(document_store))
+indexing.run({"writer": {"documents": documents}})
+Indexing: Creates an indexing pipeline (Pipeline), adds a DocumentWriter component to write documents to document_store, and runs the pipeline to index the provided documents.
+
+querying = Pipeline()
+querying.add_component("retriever", ChromaQueryTextRetriever(document_store))
+results = querying.run({"retriever": {"query": "senthil", "top_k": 2}})
+Querying: Creates a querying pipeline (Pipeline), adds a ChromaQueryTextRetriever component to retrieve documents from document_store based on a query ("java" in this case), and runs the pipeline to retrieve results (top_k documents).
+
+for d in results["retriever"]["documents"]:
+    print(d.meta, d.score)
+Print Results: Iterates over the retrieved documents (results["retriever"]["documents"]) and prints out metadata (d.meta) and score (d.score) for each document.
+
+
+from haystack.components.builders import PromptBuilder
+from haystack.components.generators import OpenAIGenerator
+Imports: Further imports for building prompts and using an AI language model (OpenAIGenerator).
+
+template = """Given these documents, answer the question.
+              Documents:
+              {% for doc in documents %}
+                  {{ doc.content }}
+                  {{ doc.meta }}
+              {% endfor %}
+              Question: {{query}}
+              Answer:"""
+prompt_builder = PromptBuilder(template=template)
+Prompt Building: Defines a template (template) for generating prompts. PromptBuilder is initialized with this template to construct prompts dynamically based on documents and queries.
+os.environ["OPENAI_API_KEY"] = "your openai api key paste here"
+llm = OpenAIGenerator()
+OpenAI Settings: Sets the OpenAI API key in the environment variable OPENAI_API_KEY and initializes an instance of OpenAIGenerator (llm), presumably for generating text using OpenAI's language model.
+
+rag_pipeline = Pipeline()
+rag_pipeline.add_component("retriever", ChromaQueryTextRetriever(document_store))
+rag_pipeline.add_component("prompt_builder", prompt_builder)
+rag_pipeline.add_component("llm", llm)
+rag_pipeline.connect("retriever.documents", "prompt_builder.documents")
+rag_pipeline.connect("prompt_builder", "llm")
+RAG Pipeline: Creates a pipeline (rag_pipeline) for Retrieval-Augmented Generation (RAG). Components are added for retrieval (ChromaQueryTextRetriever), prompt building (prompt_builder), and language model (llm). Connections are established to pass documents from retriever to prompt builder and outputs from prompt builder to language model.
+
+query = "In which state does senthil live?"
+result = rag_pipeline.run(data={"prompt_builder": {"query":query}, "retriever": {"query": query, "top_k": 3}})
+print(result["llm"]["replies"][0])
+Running RAG Pipeline: Runs the RAG pipeline (rag_pipeline) with a specified query ("In which state does senthil live"). The result (result["llm"]["replies"][0]) contains the generated response from the language model (llm).
+
+
+Conclusion
+In this tutorial, we’ve explored how to integrate Haystack with ChromaDB, OpenAI, and implement RAG to build intelligent systems for managing documents and generating content. By following these steps, you can harness the power of these technologies to enhance your applications with advanced AI capabilities. Experiment with different configurations and datasets to unlock new possibilities in information retrieval and content generation.

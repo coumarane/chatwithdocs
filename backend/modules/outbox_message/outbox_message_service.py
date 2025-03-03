@@ -36,8 +36,18 @@ class OutboxMessageService:
 
                 # Mark message as SENT
                 await self.repo.mark_message_as_sent(message.id)
+
+                # COMMIT after processing each message
+                await self.db_session.commit()
+
                 logger.info(f"✅ Successfully processed message ID {message.id}")
 
             except Exception as e:
                 logger.error(f"❌ Failed to process message {message.id}: {str(e)}", exc_info=True)
+
+                # ROLLBACK if anything goes wrong (optional)
+                await self.db_session.rollback()
+
+                # You could also mark the message as FAILED if needed
                 await self.repo.mark_message_as_failed(message.id)
+                await self.db_session.commit()
