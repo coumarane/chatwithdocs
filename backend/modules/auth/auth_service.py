@@ -92,6 +92,13 @@ class AuthService:
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
+        # Check if email is verified
+        if not user.is_email_verified:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Email has not been verified. Please verify your email before logging in.",
+            )
+
         # Generate access token
         access_token = create_access_token(
             data={"sub": user.user_name, "token_type": "access"},

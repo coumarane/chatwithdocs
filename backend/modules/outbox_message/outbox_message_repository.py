@@ -25,12 +25,11 @@ class OutboxMessageRepository(BaseRepository):
 
     async def get_pending_messages(self) -> list[OutboxMessageORM]:
         """Fetch all pending messages safely."""
-        async with self.db_session.begin():  # Ensures transaction is active
-            result = await self.db_session.execute(
-                select(OutboxMessageORM).where(OutboxMessageORM.status == MessageStatusEnum.PENDING.value)
-            )
-            messages = result.scalars().all()
-            return messages or []  # Ensure it returns an empty list, not None
+        result = await self.db_session.execute(
+            select(OutboxMessageORM).where(OutboxMessageORM.status == MessageStatusEnum.PENDING.value)
+        )
+        messages = result.scalars().all()
+        return messages or []  # Ensure it returns an empty list, not None
 
     async def mark_message_as_sent(self, message_id: int) -> None:
         """ Mark a message as SENT """

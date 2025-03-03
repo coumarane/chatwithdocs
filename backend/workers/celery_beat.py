@@ -18,9 +18,9 @@ celery.conf.beat_scheduler = "celery.beat.PersistentScheduler"
 
 # Schedule periodic tasks
 celery.conf.beat_schedule = {
-    "process_outbox_every_5_min": {
+    "process_outbox_every_min": {
         "task": "process_outbox",
-        "schedule": crontab(minute="*/5"),  # Runs every 5 minutes
+        "schedule": crontab(minute="*/1"),  # Runs every minute
     },
 }
 
