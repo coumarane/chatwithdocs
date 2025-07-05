@@ -1,0 +1,44 @@
+# kubernetes-ansible/roles/helm/tasks/main.yml
+---
+- name: Ensure curl and gpg are present (Debian/Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - curl
+      - gnupg
+    state: present
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+  tags: [helm_install]
+
+- name: Ensure curl and gpg are present (RHEL/CentOS)
+  ansible.builtin.yum:
+    name:
+      - curl
+      - gnupg
+    state: present
+  when: ansible_os_family == "RedHat"
+  tags: [helm_install]
+
+- name: Download Helm installation script
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    dest: /tmp/get_helm.sh
+    mode: "0755" # Make the script executable
+  tags: [helm_install]
+
+- name: Execute Helm installation script
+  ansible.builtin.command: /tmp/get_helm.sh
+  args:
+    creates: /usr/local/bin/helm
+  tags: [helm_install]
+
+- name: Verify Helm installation
+  ansible.builtin.command: helm version
+  register: helm_version_output
+  changed_when: false
+  tags: [helm_install]
+
+- name: Display Helm version
+  ansible.builtin.debug:
+    var: helm_version_output.stdout_lines
+  tags: [helm_install]

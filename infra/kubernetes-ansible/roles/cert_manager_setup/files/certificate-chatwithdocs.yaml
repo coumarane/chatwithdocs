@@ -1,0 +1,13 @@
+# kubernetes-ansible/roles/app_deployment/files/chatwithdocs-cert.yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: chatwithdocs-prod-cert-v2
+spec:
+  secretName: chatwithdocs-prod-sec-v2
+  # Set the issuer reference to the ClusterIssuer created earlier
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - chatwithdocs.org

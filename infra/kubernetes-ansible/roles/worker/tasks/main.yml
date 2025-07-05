@@ -1,0 +1,52 @@
+# kubernetes-ansible/roles/worker/tasks/main.yml
+
+- name: Add Kubernetes APT GPG key
+  ansible.builtin.shell: "curl -fsSL https://pkgs.k8s.io/core:/stable:/{{ kubernetes_apt_repo_version }}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg"
+  args:
+    creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  tags:
+    - k8s_install
+
+- name: Add Kubernetes APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/{{ kubernetes_apt_repo_version }}/deb/ /"
+    state: present
+    filename: kubernetes
+  tags:
+    - k8s_install
+
+- name: Update apt cache after adding repo
+  ansible.builtin.apt:
+    update_cache: yes
+  tags:
+    - k8s_install
+
+- name: Install kubelet, kubeadm, kubectl
+  ansible.builtin.apt:
+    name:
+      - "kubelet={{ kubernetes_version }}-1.1"
+      - "kubeadm={{ kubernetes_version }}-1.1"
+      - "kubectl={{ kubernetes_version }}-1.1"
+    state: present
+    allow_unauthenticated: yes
+  tags:
+    - k8s_install
+
+- name: Hold kubelet, kubeadm, kubectl packages
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop:
+    - kubelet
+    - kubeadm
+    - kubectl
+  tags:
+    - k8s_install
+
+- name: Join worker node to Kubernetes cluster
+  ansible.builtin.command: "{{ hostvars[groups['master'][0]]['kubeadm_join_command'] }}"
+  args:
+    creates: /etc/kubernetes/kubelet.conf # Ensures this task only runs if not already joined
+  when: "hostvars[groups['master'][0]]['kubeadm_join_command'] is defined"
+  tags:
+    - k8s_worker

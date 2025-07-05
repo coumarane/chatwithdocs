@@ -1,0 +1,123 @@
+- name: Add Jetstack Helm repository
+  ansible.builtin.command: helm repo add jetstack https://charts.jetstack.io
+  changed_when: false
+  become: yes
+  tags: [cert_manager_setup]
+
+- name: Update all Helm repositories
+  ansible.builtin.command: helm repo update
+  changed_when: false
+  become: yes
+  tags: [cert_manager_setup]
+
+- name: Install cert-manager with CRDs using Helm
+  ansible.builtin.command: >
+    helm upgrade --install cert-manager jetstack/cert-manager
+    --namespace cert-manager
+    --create-namespace
+    --set installCRDs=true
+  changed_when: false
+  become: yes
+  tags: [cert_manager_setup]
+
+- name: Wait for cert-manager pods to be ready
+  ansible.builtin.command: >
+    kubectl rollout status deploy/{{ item }} -n cert-manager --timeout=300s
+  loop:
+    - cert-manager
+    - cert-manager-cainjector
+    - cert-manager-webhook
+  register: rollout_status
+  until: rollout_status.rc == 0
+  retries: 10
+  delay: 15
+  changed_when: false
+  become: yes
+  tags: [cert_manager_setup]
+
+- name: Copy Let's Encrypt ClusterIssuer manifest
+  ansible.builtin.copy:
+    src: letsencrypt-prod-issuer.yaml # Relative to files/ directory
+    dest: /tmp/k8s_app_manifests/clusterissuer-letsencrypt-prod.yaml # Use the common temp dir
+    mode: "0644"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  become: yes
+  tags: [cert_manager_setup]
+
+- name: Apply Let's Encrypt ClusterIssuer
+  ansible.builtin.command: >
+    kubectl apply -f /tmp/k8s_app_manifests/clusterissuer-letsencrypt-prod.yaml
+  register: clusterissuer_apply
+  changed_when: "'created' in clusterissuer_apply.stdout or 'configured' in clusterissuer_apply.stdout"
+  failed_when: clusterissuer_apply.rc != 0
+  become: yes
+  tags: [cert_manager_setup]
+
+- name: Create Let's Encrypt Certificate for chatwithdocs.org
+  ansible.builtin.copy:
+    src: certificate-chatwithdocs.yaml
+    dest: /tmp/k8s_app_manifests/certificate-chatwithdocs.yaml
+    mode: "0644"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  become: yes
+  tags: [cert_manager_setup]
+
+- name: Apply Certificate for chatwithdocs.org
+  ansible.builtin.command: kubectl apply -f /tmp/k8s_app_manifests/certificate-chatwithdocs.yaml
+  register: cert_apply
+  changed_when: "'created' in cert_apply.stdout or 'configured' in cert_apply.stdout"
+  become: yes
+  tags: [cert_manager_setup]
+
+# --- Nginx Ingress Controller Setup ---
+- name: Download Nginx Ingress Controller manifest
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.3/deploy/static/provider/cloud/deploy.yaml"
+    dest: "/tmp/k8s_app_manifests/ingress-nginx-controller.yaml" # Use the common temp dir
+    mode: "0644"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  become: yes
+  tags: [cert_manager_setup]
+
+- name: Apply Nginx Ingress Controller manifest
+  ansible.builtin.command: kubectl apply -f /tmp/k8s_app_manifests/ingress-nginx-controller.yaml
+  register: ingress_controller_apply_output
+  changed_when: "'created' in ingress_controller_apply_output.stdout or 'configured' in ingress_controller_apply_output.stdout"
+  become: yes
+  tags: [cert_manager_setup]
+
+- name: Wait for Nginx Ingress Controller pods to be ready
+  ansible.builtin.command: kubectl rollout status deployment/ingress-nginx-controller -n ingress-nginx --timeout=300s
+  register: ingress_controller_rollout_status
+  until: ingress_controller_rollout_status.rc == 0
+  retries: 20
+  delay: 15 # Check every 15 seconds, up to 5 minutes
+  changed_when: false
+  become: yes
+  tags: [cert_manager_setup]
+
+# --- IMPORTANT: PATCH THE SERVICE AFTER IT'S APPLIED ---
+- name: Patch Nginx Ingress Controller Service externalTrafficPolicy to Cluster
+  ansible.builtin.command: >
+    kubectl patch svc ingress-nginx-controller -n ingress-nginx
+    --type='json' -p='[{"op": "replace", "path": "/spec/externalTrafficPolicy", "value": "Cluster"}]'
+  register: patch_ingress_svc_output
+  changed_when: "'patched' in patch_ingress_svc_output.stdout or 'configured' in patch_ingress_svc_output.stdout"
+  become: yes
+  tags: [cert_manager_setup]
+
+- name: Verify Nginx Ingress Controller Service (get NodePort if applicable)
+  ansible.builtin.command: kubectl get svc -n ingress-nginx ingress-nginx-controller -o wide
+  register: ingress_svc_status
+  changed_when: false
+  become: yes
+  tags: [cert_manager_setup, verify]
+
+- name: Debug - Ingress Controller NodePort (if any)
+  ansible.builtin.debug:
+    msg: "Nginx Ingress Controller NodePort for HTTP: {{ ingress_svc_status.stdout }}"
+  when: ingress_svc_status.stdout is defined and ingress_svc_status.stdout | length > 0
+  tags: [cert_manager_setup, verify]

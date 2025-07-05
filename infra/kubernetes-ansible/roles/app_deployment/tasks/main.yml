@@ -1,0 +1,117 @@
+# kubernetes-ansible/roles/app_deployment/tasks/main.yml
+
+# Copy application manifests to the master node's temporary directory
+- name: Copy hello-world-deployment.yaml to master node
+  ansible.builtin.copy:
+    src: hello-world-deployment.yaml
+    dest: "/tmp/k8s_app_manifests/hello-world-deployment.yaml" # Use the common temp dir
+    mode: "0644"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  become: yes
+  tags: [app_deploy]
+
+- name: Copy hello-world-service.yaml to master node
+  ansible.builtin.copy:
+    src: hello-world-service.yaml
+    dest: "/tmp/k8s_app_manifests/hello-world-service.yaml" # Use the common temp dir
+    mode: "0644"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  become: yes
+  tags: [app_deploy]
+
+- name: Copy hello-world-ingress.yaml to master node
+  ansible.builtin.copy:
+    src: hello-world-ingress.yaml
+    dest: "/tmp/k8s_app_manifests/hello-world-ingress.yaml" # Use the common temp dir
+    mode: "0644"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  become: yes
+  tags: [app_deploy]
+
+# Apply application manifests
+- name: Apply hello-world-deployment
+  ansible.builtin.command: kubectl apply -f /tmp/k8s_app_manifests/hello-world-deployment.yaml
+  register: deployment_output
+  changed_when: "'created' in deployment_output.stdout or 'configured' in deployment_output.stdout"
+  become: yes
+  tags: [app_deploy]
+
+- name: Apply hello-world-service
+  ansible.builtin.command: kubectl apply -f /tmp/k8s_app_manifests/hello-world-service.yaml
+  register: service_output
+  changed_when: "'created' in service_output.stdout or 'configured' in service_output.stdout"
+  become: yes
+  tags: [app_deploy]
+
+- name: Apply hello-world-ingress
+  ansible.builtin.command: kubectl apply -f /tmp/k8s_app_manifests/hello-world-ingress.yaml
+  register: ingress_output
+  changed_when: "'created' in ingress_output.stdout or 'configured' in ingress_output.stdout"
+  become: yes
+  tags: [app_deploy]
+
+# --- Verification & Instructions ---
+- name: Verify hello-world pods
+  ansible.builtin.command: kubectl get pods -l app=hello-world -o wide
+  register: hello_pods
+  changed_when: false
+  become: yes
+  tags: [app_deploy, verify]
+
+- name: Print hello-world pods status
+  ansible.builtin.debug:
+    msg: "{{ hello_pods.stdout_lines }}"
+  tags: [app_deploy, verify]
+
+- name: Verify hello-world service
+  ansible.builtin.command: kubectl get services hello-world-service -o wide
+  register: hello_service
+  changed_when: false
+  become: yes
+  tags: [app_deploy, verify]
+
+- name: Print hello-world service details
+  ansible.builtin.debug:
+    msg: "{{ hello_service.stdout_lines }}"
+  tags: [app_deploy, verify]
+
+- name: Verify hello-world ingress
+  ansible.builtin.command: kubectl get ingress hello-world-ingress -o wide
+  register: hello_ingress
+  changed_when: false
+  become: yes
+  tags: [app_deploy, verify]
+
+- name: Print hello-world ingress details
+  ansible.builtin.debug:
+    msg: "{{ hello_ingress.stdout_lines }}"
+  tags: [app_deploy, verify]
+
+- name: Get IP addresses of Kubernetes nodes
+  ansible.builtin.command: kubectl get nodes -o jsonpath='{range .items[*]}{.status.addresses[?(@.type=="InternalIP")].address}{"\n"}{end}'
+  register: node_ips_raw
+  changed_when: false
+  become: yes
+  tags: [app_deploy, verify]
+
+- name: Set fact with Node IPs for access instruction
+  ansible.builtin.set_fact:
+    k8s_node_ips: "{{ node_ips_raw.stdout_lines }}"
+  tags: [app_deploy, verify]
+
+- name: Display access instructions for Hello World application via Domain
+  ansible.builtin.debug:
+    msg: |
+      Hello World application and Ingress Controller deployed!
+      To access the application via 'chatwithdocs.org':
+      1. Ensure your domain's DNS A record for 'chatwithdocs.org' (and 'www.chatwithdocs.org' if desired) points to one of your Kubernetes Node IPs:
+         {% for ip in k8s_node_ips %}
+         - {{ ip }}
+         {% endfor %}
+      2. Allow DNS propagation time (can be minutes to hours).
+      3. Access your app in a browser: https://chatwithdocs.org (using HTTPS now!)
+      (Remember to ensure ports 80/443 are open in your server/cloud firewall if accessing externally)
+  tags: [app_deploy, verify]

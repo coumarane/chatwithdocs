@@ -1,0 +1,30 @@
+# kubernetes-ansible/playbook.yml
+
+- name: Setup Kubernetes Master Node
+  hosts: master
+  become: yes
+  gather_facts: yes # Essential for hostvars to work later
+  roles:
+    - common
+    - master
+    - cilium
+
+- name: Setup Kubernetes Worker Nodes
+  hosts: worker
+  become: yes
+  gather_facts: yes
+  roles:
+    - common
+    - worker
+
+- name: Verify Kubernetes Cluster Status (optional, run from control node after setup)
+  hosts: master
+  become: no # Don't need sudo for kubectl get nodes
+  tasks:
+    - name: Get Kubernetes nodes status
+      ansible.builtin.command: kubectl --kubeconfig /etc/kubernetes/admin.conf get nodes
+      register: k8s_nodes_status
+      changed_when: false
+    - name: Print nodes status
+      ansible.builtin.debug:
+        msg: "{{ k8s_nodes_status.stdout }}"

@@ -1,0 +1,99 @@
+# kubernetes-ansible/roles/metallb/tasks/main.yml
+
+- name: Create temporary directory for MetalLB manifests on master
+  ansible.builtin.file:
+    path: "/tmp/metallb_manifests"
+    state: directory
+    mode: "0755"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  become: yes
+  tags: [metallb_deploy, cleanup]
+
+- name: Download MetalLB native manifest
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/metallb/metallb/v0.15.2/config/manifests/metallb-native.yaml" # Use v0.14.3 or check for the latest stable
+    dest: "/tmp/metallb_manifests/metallb-native.yaml"
+    mode: "0644"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  become: yes
+  tags: [metallb_deploy]
+
+- name: Apply MetalLB native manifest (creates metallb-system namespace and core components)
+  ansible.builtin.command: kubectl apply -f /tmp/metallb_manifests/metallb-native.yaml
+  register: metallb_native_apply_output
+  changed_when: "'created' in metallb_native_apply_output.stdout or 'configured' in metallb_native_apply_output.stdout"
+  become: yes
+  tags: [metallb_deploy]
+
+- name: Wait for MetalLB webhook service to be available
+  ansible.builtin.command: >
+    kubectl get --raw /livez
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  register: _webhook_livez
+  until: _webhook_livez.rc == 0
+  retries: 30
+  delay: 10
+  become: yes
+  changed_when: false
+
+- name: Wait for MetalLB controller (deployment) to be ready # <--- THIS TASK SHOULD COME BEFORE APPLYING CONFIG
+  ansible.builtin.command: kubectl rollout status deployment/controller -n metallb-system --timeout=300s
+  register: metallb_controller_status
+  until: metallb_controller_status.rc == 0
+  retries: 20
+  delay: 15
+  changed_when: false
+  become: yes
+  tags: [metallb_deploy]
+
+- name: Copy MetalLB config.yaml to master node
+  ansible.builtin.copy:
+    src: metallb-config.yaml
+    dest: "/tmp/metallb_manifests/metallb-config.yaml"
+    mode: "0644"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  become: yes
+  tags: [metallb_deploy]
+
+- name: Apply MetalLB config.yaml (defines IP pool and advertisement)
+  ansible.builtin.command: kubectl apply -f /tmp/metallb_manifests/metallb-config.yaml
+  register: metallb_config_apply_output
+  changed_when: "'created' in metallb_config_apply_output.stdout or 'configured' in metallb_config_apply_output.stdout"
+  become: yes
+  tags: [metallb_deploy]
+
+- name: Wait for MetalLB controller (deployment) to be ready
+  ansible.builtin.command: kubectl rollout status deployment/controller -n metallb-system --timeout=300s
+  register: metallb_controller_status
+  until: metallb_controller_status.rc == 0
+  retries: 20
+  delay: 15
+  changed_when: false
+  become: yes
+  tags: [metallb_deploy]
+
+- name: Wait for MetalLB speaker (DaemonSet) to be ready on all nodes
+  ansible.builtin.command: kubectl rollout status daemonset/speaker -n metallb-system --timeout=300s
+  register: metallb_speaker_status
+  until: metallb_speaker_status.rc == 0
+  retries: 20
+  delay: 15
+  changed_when: false
+  become: yes
+  tags: [metallb_deploy]
+
+- name: Verify MetalLB pods status
+  ansible.builtin.command: kubectl get pods -n metallb-system -o wide
+  register: metallb_pods
+  changed_when: false
+  become: yes
+  tags: [metallb_deploy, verify]
+
+- name: Print MetalLB pods status
+  ansible.builtin.debug:
+    msg: "{{ metallb_pods.stdout_lines }}"
+  tags: [metallb_deploy, verify]

@@ -1,0 +1,25 @@
+# kubernetes-ansible/roles/app_deployment/files/hello-world-ingress.yaml
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hello-world-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - chatwithdocs.org
+      secretName: chatwithdocs-prod-sec-v2
+  rules:
+    - host: chatwithdocs.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hello-world-service
+                port:
+                  number: 80

@@ -1,0 +1,65 @@
+# kubernetes-ansible/roles/cilium/tasks/main.yml
+
+- name: Download Cilium CLI
+  ansible.builtin.get_url:
+    url: "https://github.com/cilium/cilium-cli/releases/latest/download/cilium-linux-amd64.tar.gz"
+    dest: "/tmp/cilium-linux-amd64.tar.gz"
+    mode: "0644"
+  tags:
+    - cni
+
+- name: Extract Cilium CLI
+  ansible.builtin.unarchive:
+    src: "/tmp/cilium-linux-amd64.tar.gz"
+    dest: "/tmp/"
+    remote_src: yes
+  tags:
+    - cni
+
+- name: Move Cilium CLI to /usr/local/bin
+  ansible.builtin.copy:
+    remote_src: yes
+    src: "/tmp/cilium"
+    dest: "/usr/local/bin/cilium"
+    mode: "0755"
+  tags:
+    - cni
+
+- name: Wait for Kubernetes API server to be reachable
+  ansible.builtin.command: kubectl version --request-timeout='15s'
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  register: k8s_api_check
+  retries: 10
+  delay: 15
+  until: k8s_api_check.rc == 0
+  changed_when: false
+  tags: [cni]
+
+- name: Check if Cilium is already installed
+  ansible.builtin.command: kubectl --kubeconfig /etc/kubernetes/admin.conf -n kube-system get daemonset cilium
+  register: cilium_check
+  ignore_errors: true
+  changed_when: false
+
+- name: Install or upgrade Cilium with Hubble
+  ansible.builtin.command: >
+    cilium {{ 'upgrade' if cilium_check.rc == 0 else 'install' }} --version {{ cilium_version }}
+    {% if hubble_relay_enabled %} --set hubble.relay.enabled=true {% endif %}
+    {% if hubble_ui_enabled %} --set hubble.ui.enabled=true {% endif %}
+  args:
+    chdir: "{{ ansible_env.HOME }}"
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  register: cilium_install_output
+  changed_when: "'No changes' not in cilium_install_output.stdout"
+  tags: [cni]
+
+- name: Enable Hubble UI (optional)
+  ansible.builtin.command: cilium hubble enable
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  args:
+    chdir: "{{ ansible_env.HOME }}"
+  when: hubble_ui_enabled
+  changed_when: false

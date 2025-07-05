@@ -1,0 +1,10 @@
+# kubernetes-ansible/deploy_app_playbook.yml
+
+- name: Install packages linux
+  hosts: master # Target the master node as it has kubectl configured
+  become: yes # All tasks will run with sudo
+  gather_facts: yes
+  collections:
+    - kubernetes.core # This tells Ansible to ensure modules from kubernetes.core are available
+  roles:
+    - helm

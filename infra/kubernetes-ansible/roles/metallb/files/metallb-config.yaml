@@ -1,0 +1,19 @@
+# kubernetes-ansible/roles/metallb/files/metallb-config.yaml
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: default
+  namespace: metallb-system 
+spec:
+  addresses:
+  - 51.38.19.54/32 # Replace with your actual IP address or range
+  autoAssign: false
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: default
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+  - default

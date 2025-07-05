@@ -1,0 +1,15 @@
+# kubernetes-ansible/deploy_app_playbook.yml
+
+- name: Deploy a Sample Hello World Application
+  hosts: master # Target the master node as it has kubectl configured
+  become: yes # All tasks will run with sudo
+  gather_facts: yes # Gather facts if needed for later tasks (e.g., ansible_user)
+  collections:
+    - kubernetes.core # This tells Ansible to ensure modules from kubernetes.core are available
+  roles:
+    # Infrastructure setup roles should run first
+    - metallb # Install MetalLB for LoadBalancer services
+    - cert_manager_setup # Install Nginx Ingress Controller and Cert-Manager
+
+    # Application deployment role runs after infrastructure is ready
+    - app_deployment

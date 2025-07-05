@@ -106,16 +106,26 @@ services:
   chromadb:
     image: chromadb/chroma:latest
     container_name: chromadb
-    restart: always
+    restart: unless-stopped # possible values are: "no", always", "on-failure", "unless-stopped"
     ports:
       - "8800:8000"
     env_file:
       - .env.dev
     environment:
+      - IS_PERSISTENT=TRUE
       - CHROMA_SERVER_AUTHN_CREDENTIALS=${CHROMA_SERVER_AUTHN_CREDENTIALS}
+      - CHROMA_AUTH_TOKEN_TRANSPORT_HEADER=${CHROMA_AUTH_TOKEN_TRANSPORT_HEADER}
       - CHROMA_SERVER_AUTHN_PROVIDER=${CHROMA_SERVER_AUTHN_PROVIDER}
+      - CHROMA_SERVER_CORS_ALLOW_ORIGINS=["*"]
+      - PERSIST_DIRECTORY=/index_data
     volumes:
       - chroma_data:/index_data
+    healthcheck:
+      # Adjust below to match your container port
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
       - backend-network
 
@@ -232,6 +242,7 @@ volumes:
   redis_data:
   minio_data:
   chroma_data:
+    driver: local
 
 networks:
   backend-network:

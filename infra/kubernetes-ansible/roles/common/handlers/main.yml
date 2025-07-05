@@ -1,0 +1,6 @@
+# roles/common/handlers/main.yml
+- name: Restart containerd
+  ansible.builtin.systemd:
+    name: containerd
+    state: restarted
+    enabled: true

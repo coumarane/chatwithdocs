@@ -1,0 +1,92 @@
+---
+- name: Drain and Delete Worker Nodes from Cluster
+  hosts: master
+  become: yes # Need sudo privileges for kubectl commands
+  vars:
+    kubeconfig_path: /etc/kubernetes/admin.conf
+
+  tasks:
+    - name: Get list of worker nodes
+      ansible.builtin.shell: kubectl --kubeconfig {{ kubeconfig_path }} get nodes -o custom-columns=NAME:.metadata.name --no-headers | grep -v 'master' # Exclude the master node itself
+      register: worker_nodes_output
+      changed_when: false
+
+    - name: Process each worker node for draining and deletion
+      ansible.builtin.include_tasks: drain_and_delete_node.yml
+      loop: "{{ worker_nodes_output.stdout_lines }}"
+      loop_control:
+        loop_var: current_worker_node
+      when: worker_nodes_output.stdout_lines | length > 0
+
+- name: Reset Kubernetes on all Nodes (Master and Workers)
+  hosts: master,worker
+  become: yes
+
+  tasks:
+    - name: Reset kubeadm on the node
+      ansible.builtin.command: kubeadm reset --force
+      register: kubeadm_reset_output
+      changed_when: true
+
+    - name: Clean up CNI network configurations
+      ansible.builtin.file:
+        path: /etc/cni/net.d/
+        state: absent
+
+    - name: Clean up Kubernetes configuration directory
+      ansible.builtin.file:
+        path: /etc/kubernetes/
+        state: absent
+
+    - name: Clean up .kube directory for the current user
+      ansible.builtin.file:
+        path: "{{ ansible_env.HOME }}/.kube"
+        state: absent
+
+    - name: Stop Docker service (if Docker is used)
+      ansible.builtin.systemd:
+        name: docker
+        state: stopped
+        enabled: no
+      ignore_errors: yes
+      when: ansible_facts.packages.docker is defined
+
+    - name: Clean up Docker data directory (if Docker is used)
+      ansible.builtin.file:
+        path: /var/lib/docker
+        state: absent
+      ignore_errors: yes
+      when: ansible_facts.packages.docker is defined
+
+    - name: Stop containerd service (if containerd is used)
+      ansible.builtin.systemd:
+        name: containerd
+        state: stopped
+        enabled: no
+      ignore_errors: yes
+      when: ansible_facts.packages.containerd is defined
+
+    - name: Clean up containerd data directory (if containerd is used)
+      ansible.builtin.file:
+        path: /var/lib/containerd
+        state: absent
+      ignore_errors: yes
+      when: ansible_facts.packages.containerd is defined
+
+    - name: Unhold Kubernetes packages
+      ansible.builtin.dpkg_selections:
+        name: "{{ item }}"
+        selection: install
+      loop:
+        - kubelet
+        - kubeadm
+        - kubectl
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Uninstall Kubernetes packages (optional) - Debian/Ubuntu
+      ansible.builtin.apt:
+        name: ["kubelet", "kubeadm", "kubectl", "kubernetes-cni"]
+        state: absent
+        purge: yes
+        autoclean: yes
+      when: ansible_facts['os_family'] == "Debian"

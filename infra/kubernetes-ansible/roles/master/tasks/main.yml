@@ -1,0 +1,114 @@
+# kubernetes-ansible/roles/master/tasks/main.yml
+
+- name: Add Kubernetes APT GPG key
+  ansible.builtin.shell: "curl -fsSL https://pkgs.k8s.io/core:/stable:/{{ kubernetes_apt_repo_version }}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg"
+  args:
+    creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  tags:
+    - k8s_install
+
+- name: Add Kubernetes APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/{{ kubernetes_apt_repo_version }}/deb/ /"
+    state: present
+    filename: kubernetes
+  tags:
+    - k8s_install
+
+- name: Update apt cache after adding repo
+  ansible.builtin.apt:
+    update_cache: yes
+  tags:
+    - k8s_install
+
+- name: Install kubelet, kubeadm, kubectl
+  ansible.builtin.apt:
+    name:
+      - "kubelet={{ kubernetes_version }}-1.1"
+      - "kubeadm={{ kubernetes_version }}-1.1"
+      - "kubectl={{ kubernetes_version }}-1.1"
+    state: present
+    allow_unauthenticated: yes
+  tags:
+    - k8s_install
+
+- name: Hold kubelet, kubeadm, kubectl packages
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop:
+    - kubelet
+    - kubeadm
+    - kubectl
+  tags:
+    - k8s_install
+
+- name: Initialize Kubernetes cluster
+  ansible.builtin.command: "kubeadm init --pod-network-cidr={{ pod_network_cidr }}"
+  args:
+    creates: /etc/kubernetes/admin.conf
+  register: kubeadm_init_output
+  tags:
+    - k8s_master
+
+- name: Debug - Check existence of /etc/kubernetes/admin.conf
+  ansible.builtin.stat:
+    path: /etc/kubernetes/admin.conf
+  register: admin_conf_stat
+  tags:
+    - k8s_master_debug
+
+- name: Debug - Print admin.conf existence status
+  ansible.builtin.debug:
+    msg: "admin.conf exists: {{ admin_conf_stat.stat.exists }}. If false, kubeadm init failed."
+  tags:
+    - k8s_master_debug
+
+- name: Debug - Effective HOME and SUDO_USER variables
+  ansible.builtin.debug:
+    msg:
+      - "ansible_env.HOME: {{ ansible_env.HOME }}"
+      - "ansible_env.SUDO_USER: {{ ansible_env.SUDO_USER | default('NOT SET') }}"
+      - "ansible_user: {{ ansible_user }}"
+      - "Calculated owner/group for .kube folder: {{ ansible_env.SUDO_USER | default(ansible_user) }}"
+      - "Calculated target .kube config path: {{ ansible_env.HOME }}/.kube/config"
+  tags:
+    - k8s_master_debug
+
+- name: Create .kube directory for user
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/.kube"
+    state: directory
+    mode: "0755"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  tags:
+    - k8s_master
+
+- name: Copy kubeconfig to user's .kube directory
+  ansible.builtin.copy:
+    remote_src: yes
+    src: /etc/kubernetes/admin.conf
+    dest: "/home/{{ ansible_user }}/.kube/config"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  tags:
+    - k8s_master
+
+- name: Generate kubeadm join command from master
+  ansible.builtin.command: kubeadm token create --print-join-command
+  register: join_command_output # This output is now registered against 'k8s-master' host
+  changed_when: false
+
+- name: Set fact with kubeadm join command for worker nodes
+  ansible.builtin.set_fact:
+    kubeadm_join_command: "{{ join_command_output.stdout_lines | last }}"
+  delegate_to: localhost # Make this fact available on the control node for subsequent plays
+  run_once: true
+
+- name: Debug - Print join command (for master node)
+  ansible.builtin.debug:
+    msg: "Kubeadm join command for worker: {{ join_command_output.stdout_lines | last }}"
+  # This debug still runs on the master, showing the master's generated command.
+  # The fact 'join_command_output' is now correctly available as hostvars['k8s-master']['join_command_output']

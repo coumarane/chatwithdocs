@@ -1,0 +1,3 @@
+# kubernetes-ansible/roles/master/vars/main.yml
+
+# No specific variables needed here, inheriting from common

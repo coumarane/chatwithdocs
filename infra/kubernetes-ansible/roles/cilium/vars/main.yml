@@ -1,0 +1,5 @@
+# kubernetes-ansible/roles/cilium/vars/main.yml
+
+cilium_version: "1.17.4" # Ensure compatibility with kubernetes_version
+hubble_relay_enabled: true
+hubble_ui_enabled: true

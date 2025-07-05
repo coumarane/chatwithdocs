@@ -1,0 +1,15 @@
+# kubernetes-ansible/roles/app_deployment/files/hello-world-service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-world-service
+  namespace: default
+spec:
+  selector:
+    app: hello-world
+  ports:
+    - protocol: TCP
+      port: 80  
+      targetPort: 80
+  type: ClusterIP
